@@ -13,17 +13,22 @@ from api.filters import IngredientSearchFilter, RecipeFilter
 from api.mixins import GetListViewSet
 from api.pagination import FoodgramPagination
 from api.permissions import IsAuthorOrReadOnly
-from api.recipes_utils import (add_recipe_to_list,
-                               create_file_for_shopping_cart,
-                               delete_recipe_from_list)
-from api.serializers import (AvatarSerializer, IngredientSerialiser,
-                             RecipeGetSerialiser, RecipePostSerialiser,
-                             RecipeToFavoriteSerializer,
-                             RecipeToShoppingListSerializer,
-                             SubscriptionsSerializer, TagSerialiser,
-                             UserSubscriptionSerializer)
-from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserFavorite, UserShoppingList)
+from api.recipes_utils import (
+    add_recipe_to_list,
+    create_file_for_shopping_cart,
+    delete_recipe_from_list
+)
+from api.serializers import (
+    AvatarSerializer, IngredientSerializer,
+    RecipeGetSerializer, RecipePostSerializer,
+    RecipeToFavoriteSerializer, RecipeToShoppingListSerializer,
+    SubscriptionsSerializer, TagSerializer,
+    UserSubscriptionSerializer
+)
+from recipes.models import (
+    Ingredient, Recipe, RecipeIngredient, Tag,
+    UserFavorite, UserShoppingList
+)
 from users.models import UserSubscriptions
 
 User = get_user_model()
@@ -47,7 +52,7 @@ class UserViewSet(UserViewSet):
         serializer_class=AvatarSerializer,
     )
     def avatar(self, request):
-        """Представление для взаимодействия пользователя со своим аватаром"""
+        """Представление для взаимодействия пользователя со своим аватаром."""
         user = request.user
         serializer = self.get_serializer(
             user, data=request.data, context={"request": request}
@@ -107,10 +112,10 @@ class UserViewSet(UserViewSet):
 
 
 class IngredientViewSet(GetListViewSet):
-    """Представление для получения ингридиентов."""
+    """Представление для получения ингредиентов."""
 
     queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerialiser
+    serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
     filter_backends = (IngredientSearchFilter,)
     search_fields = ("name",)
@@ -120,7 +125,7 @@ class TagViewSet(GetListViewSet):
     """Представление для получения тегов."""
 
     queryset = Tag.objects.all()
-    serializer_class = TagSerialiser
+    serializer_class = TagSerializer
     permission_classes = (AllowAny,)
 
 
@@ -128,7 +133,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Представление для рецептов."""
 
     queryset = Recipe.objects.all()
-    serializer_class = RecipeGetSerialiser
+    serializer_class = RecipeGetSerializer
     http_method_names = ("get", "post", "patch", "delete")
     pagination_class = FoodgramPagination
     filter_backends = (DjangoFilterBackend,)
@@ -137,7 +142,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action in ("create", "partial_update"):
-            return RecipePostSerialiser
+            return RecipePostSerializer
         return super().get_serializer_class()
 
     @action(["get"], detail=True, url_path="get-link")
@@ -188,7 +193,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(["get"], detail=False, permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
-        """Скачивание ингридиентов из списка покупок."""
+        """Скачивание ингредиентов из списка покупок."""
         user = request.user
 
         ingredients = (

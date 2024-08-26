@@ -2,7 +2,6 @@ from django_filters import rest_framework as filters
 from django_filters.filters import CharFilter, ModelMultipleChoiceFilter
 from django_filters.rest_framework import BooleanFilter
 from rest_framework.filters import SearchFilter
-
 from recipes.models import Recipe, Tag
 
 
@@ -22,8 +21,8 @@ class RecipeFilter(filters.FilterSet):
         to_field_name="slug",
         conjoined=False,
     )
-    is_favorited = BooleanFilter(method='filter_is_favorited')
-    is_in_shopping_cart = BooleanFilter(method='filter_is_in_shopping_cart')
+    is_favorited = BooleanFilter(method="filter_is_favorited")
+    is_in_shopping_cart = BooleanFilter(method="filter_is_in_shopping_cart")
 
     def filter_is_favorited(self, queryset, name, value):
         if self.request.user.is_authenticated and value:

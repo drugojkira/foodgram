@@ -5,8 +5,10 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserFavorite, UserShoppingList)
+from recipes.models import (
+    Ingredient, Recipe, RecipeIngredient, Tag,
+    UserFavorite, UserShoppingList
+)
 from users.models import UserSubscriptions
 
 User = get_user_model()
@@ -30,7 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        """Проверяем, подписан ли текущий пользователь"""
+        """Проверяем, подписан ли текущий пользователь."""
         request = self.context.get("request")
         return (
             request
@@ -55,14 +57,14 @@ class AvatarSerializer(serializers.ModelSerializer):
         return value
 
 
-class IngredientSerialiser(serializers.ModelSerializer):
+class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ingredient
         fields = "__all__"
 
 
-class TagSerialiser(serializers.ModelSerializer):
+class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
@@ -83,11 +85,11 @@ class RecipeIngredientGetSerializer(serializers.ModelSerializer):
         fields = ("amount", "id", "name", "measurement_unit")
 
 
-class RecipeGetSerialiser(serializers.ModelSerializer):
+class RecipeGetSerializer(serializers.ModelSerializer):
 
     image = Base64ImageField()
     author = UserSerializer()
-    tags = TagSerialiser(many=True)
+    tags = TagSerializer(many=True)
     ingredients = RecipeIngredientGetSerializer(
         many=True,
         source="recipeingredient"
@@ -133,7 +135,7 @@ class RecipeGetSerialiser(serializers.ModelSerializer):
         )
 
 
-class RecipeFavoriteGetSerialiser(serializers.ModelSerializer):
+class RecipeFavoriteGetSerializer(serializers.ModelSerializer):
 
     image = Base64ImageField()
 
@@ -142,7 +144,7 @@ class RecipeFavoriteGetSerialiser(serializers.ModelSerializer):
         fields = ("id", "name", "image", "cooking_time")
 
 
-class RecipeIngredientPostSerialiser(serializers.ModelSerializer):
+class RecipeIngredientPostSerializer(serializers.ModelSerializer):
 
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
@@ -153,10 +155,10 @@ class RecipeIngredientPostSerialiser(serializers.ModelSerializer):
         fields = ("amount", "id")
 
 
-class RecipePostSerialiser(serializers.ModelSerializer):
+class RecipePostSerializer(serializers.ModelSerializer):
 
     image = Base64ImageField()
-    ingredients = RecipeIngredientPostSerialiser(
+    ingredients = RecipeIngredientPostSerializer(
         many=True,
         source="recipeingredient"
     )
@@ -267,7 +269,7 @@ class RecipePostSerialiser(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        return RecipeGetSerialiser(instance, context=self.context).data
+        return RecipeGetSerializer(instance, context=self.context).data
 
 
 class SubscriptionsRecipeSerializer(serializers.ModelSerializer):
@@ -283,7 +285,7 @@ class SubscriptionsPostSerializer(UserSerializer):
 
 class SubscriptionsSerializer(UserSerializer):
     """
-    Для получение информации о пользователе,
+    Для получения информации о пользователе,
     на которого текущий пользователь подписался.
     """
 
@@ -367,7 +369,7 @@ class RecipeToFavoriteSerializer(serializers.ModelSerializer):
         ]
 
     def to_representation(self, instance):
-        return RecipeFavoriteGetSerialiser(instance.recipe).data
+        return RecipeFavoriteGetSerializer(instance.recipe).data
 
 
 class RecipeToShoppingListSerializer(serializers.ModelSerializer):
@@ -383,4 +385,4 @@ class RecipeToShoppingListSerializer(serializers.ModelSerializer):
         ]
 
     def to_representation(self, instance):
-        return RecipeFavoriteGetSerialiser(instance.recipe).data
+        return RecipeFavoriteGetSerializer(instance.recipe).data

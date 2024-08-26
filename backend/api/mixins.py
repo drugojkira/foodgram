@@ -6,3 +6,4 @@ class GetListViewSet(
         mixins.RetrieveModelMixin,
         viewsets.GenericViewSet,
 ):
+    """ViewSet для методов Get, List"""
