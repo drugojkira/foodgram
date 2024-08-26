@@ -1,0 +1,11 @@
+username,first_name,last_name,email,avatar
+user1,Иван,Иванов,ivan.ivanov@example.com,users/default_avatar.png
+user2,Мария,Петрова,maria.petrova@example.com,users/default_avatar.png
+user3,Алексей,Сидоров,alexey.sidorov@example.com,users/default_avatar.png
+user4,Екатерина,Смирнова,ekaterina.smirnova@example.com,users/default_avatar.png
+user5,Дмитрий,Кузнецов,dmitry.kuznetsov@example.com,users/default_avatar.png
+user6,Ольга,Васильева,olga.vasilyeva@example.com,users/default_avatar.png
+user7,Николай,Михайлов,nikolay.mikhailov@example.com,users/default_avatar.png
+user8,Анна,Федорова,anna.fedorova@example.com,users/default_avatar.png
+user9,Сергей,Николаев,sergey.nikolaev@example.com,users/default_avatar.png
+user10,Наталья,Кириллова,natalya.kirillova@example.com,users/default_avatar.png

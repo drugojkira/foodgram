@@ -197,7 +197,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecipeCreate'
+              $ref: '#/components/schemas/RecipeCreateUpdate'
       responses:
         '201':
           content:
@@ -276,7 +276,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecipeUpdate'
+              $ref: '#/components/schemas/RecipeCreateUpdate'
       responses:
         '200':
           content:
@@ -367,8 +367,6 @@ paths:
                 $ref: '#/components/schemas/SelfMadeError'
         '401':
           $ref: '#/components/responses/AuthenticationError'
-        '404':
-          $ref: '#/components/responses/RecipeNotFound'
 
       tags:
         - Избранное
@@ -395,8 +393,6 @@ paths:
                 $ref: '#/components/schemas/SelfMadeError'
         '401':
           $ref: '#/components/responses/AuthenticationError'
-        '404':
-          $ref: '#/components/responses/RecipeNotFound'
       tags:
         - Избранное
   /api/recipes/{id}/shopping_cart/:
@@ -427,8 +423,6 @@ paths:
                 $ref: '#/components/schemas/SelfMadeError'
         '401':
           $ref: '#/components/responses/AuthenticationError'
-        '404':
-          $ref: '#/components/responses/RecipeNotFound'
       tags:
         - Список покупок
     delete:
@@ -454,8 +448,6 @@ paths:
                 $ref: '#/components/schemas/SelfMadeError'
         '401':
           $ref: '#/components/responses/AuthenticationError'
-        '404':
-          $ref: '#/components/responses/RecipeNotFound'
       tags:
         - Список покупок
   /api/users/{id}/:
@@ -499,7 +491,7 @@ paths:
       tags:
         - Пользователи
   /api/users/me/avatar/:
-    put:
+    patch:
       operationId: Добавление аватара
       description: Добавление аватара текущего пользователя
       parameters: []
@@ -629,7 +621,7 @@ paths:
         '401':
           $ref: '#/components/responses/AuthenticationError'
         '404':
-          $ref: '#/components/responses/UserNotFound'
+          $ref: '#/components/responses/NotFound'
       tags:
         - Подписки
     delete:
@@ -656,7 +648,7 @@ paths:
         '401':
           $ref: '#/components/responses/AuthenticationError'
         '404':
-          $ref: '#/components/responses/UserNotFound'
+          $ref: '#/components/responses/NotFound'
 
       tags:
         - Подписки
@@ -734,7 +726,7 @@ paths:
             schema:
               $ref: '#/components/schemas/TokenCreate'
       responses:
-        '200':
+        '201':
           content:
             application/json:
               schema:
@@ -1150,7 +1142,7 @@ components:
       properties:
         auth_token:
           type: string
-    RecipeCreate:
+    RecipeCreateUpdate:
       type: object
       properties:
         id:
@@ -1200,58 +1192,6 @@ components:
         - ingredients
         - tags
         - image
-        - name
-        - text
-        - cooking_time
-    RecipeUpdate:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        ingredients:
-          description: Список ингредиентов
-          type: array
-          items:
-            example:
-              id: 1123
-              amount: 10
-            type: object
-            properties:
-              id:
-                description: 'Уникальный id'
-                type: integer
-              amount:
-                description: 'Количество в рецепте'
-                type: integer
-            required:
-              - id
-              - amount
-        tags:
-          description: 'Список id тегов'
-          type: array
-          example: [1, 2]
-          items:
-            type: integer
-        image:
-          description: 'Картинка, закодированная в Base64'
-          example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAgMAAABieywaAAAACVBMVEUAAAD///9fX1/S0ecCAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNoAAAAggCByxOyYQAAAABJRU5ErkJggg=='
-          type: string
-          format: binary
-        name:
-          description: 'Название'
-          type: string
-          maxLength: 256
-        text:
-          description: 'Описание'
-          type: string
-        cooking_time:
-          description: 'Время приготовления (в минутах)'
-          type: integer
-          minimum: 1
-      required:
-        - ingredients
-        - tags
         - name
         - text
         - cooking_time
@@ -1348,20 +1288,6 @@ components:
 
     NotFound:
       description: Объект не найден
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/NotFound'
-
-    RecipeNotFound:
-      description: 'Рецепт не найден'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/NotFound'
-
-    UserNotFound:
-      description: 'Пользователь не найден'
       content:
         application/json:
           schema:

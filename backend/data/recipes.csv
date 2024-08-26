@@ -1,0 +1,51 @@
+name,image,text,cooking_time,author_id
+Омлет с помидорами,recipes/images/default_recipe_image.png,"Вкусный омлет с помидорами и зеленью.",10,1
+Суп из тыквы,recipes/images/default_recipe_image.png,"Крем-суп из тыквы с пряностями.",30,2
+Куриный салат,recipes/images/default_recipe_image.png,"Легкий куриный салат с овощами.",15,3
+Рыбный пирог,recipes/images/default_recipe_image.png,"Рыбный пирог с картофелем и луком.",60,4
+Спагетти с морепродуктами,recipes/images/default_recipe_image.png,"Спагетти с мидиями и креветками.",25,5
+Курица в медовом соусе,recipes/images/default_recipe_image.png,"Курица в медовом соусе с кунжутом.",40,6
+Греческий салат,recipes/images/default_recipe_image.png,"Салат с помидорами, огурцами и фетой.",15,7
+Шоколадный торт,recipes/images/default_recipe_image.png,"Торт с шоколадным кремом и глазурью.",120,8
+Борщ,recipes/images/default_recipe_image.png,"Классический украинский борщ с говядиной.",90,9
+Плов,recipes/images/default_recipe_image.png,"Узбекский плов с бараниной и рисом.",80,10
+Цезарь с курицей,recipes/images/default_recipe_image.png,"Салат Цезарь с курицей и пармезаном.",20,1
+Картофельное пюре,recipes/images/default_recipe_image.png,"Пюре из картофеля с молоком и маслом.",25,2
+Солянка,recipes/images/default_recipe_image.png,"Солянка с колбасками и лимоном.",70,3
+Шашлык,recipes/images/default_recipe_image.png,"Шашлык из свинины с луком и специями.",90,4
+Блины,recipes/images/default_recipe_image.png,"Тонкие блины с начинкой по вкусу.",30,5
+Пицца Маргарита,recipes/images/default_recipe_image.png,"Классическая пицца с помидорами и базиликом.",35,6
+Рататуй,recipes/images/default_recipe_image.png,"Овощное рагу с баклажанами и кабачками.",50,7
+Гуляш,recipes/images/default_recipe_image.png,"Венгерский гуляш с говядиной и паприкой.",75,8
+Карп в духовке,recipes/images/default_recipe_image.png,"Запеченный карп с овощами.",60,9
+Паста Карбонара,recipes/images/default_recipe_image.png,"Паста с беконом и сыром пармезан.",25,10
+Медовик,recipes/images/default_recipe_image.png,"Торт Медовик с медовыми коржами и сметанным кремом.",180,1
+Жаркое,recipes/images/default_recipe_image.png,"Жаркое из свинины с картофелем и овощами.",90,2
+Пельмени,recipes/images/default_recipe_image.png,"Пельмени с говядиной и свининой.",60,3
+Бефстроганов,recipes/images/default_recipe_image.png,"Говядина в сметанном соусе с луком.",45,4
+Чизкейк,recipes/images/default_recipe_image.png,"Чизкейк с клубничным соусом.",120,5
+Щи,recipes/images/default_recipe_image.png,"Русские щи из кислой капусты.",70,6
+Мясо по-французски,recipes/images/default_recipe_image.png,"Свинина запеченная с картофелем и сыром.",50,7
+Лазанья,recipes/images/default_recipe_image.png,"Итальянская лазанья с мясным соусом.",90,8
+Рагу из говядины,recipes/images/default_recipe_image.png,"Рагу из говядины с картофелем и морковью.",75,9
+Пирог с яблоками,recipes/images/default_recipe_image.png,"Яблочный пирог с корицей.",60,10
+Шакшука,recipes/images/default_recipe_image.png,"Яичница с помидорами и специями.",20,1
+Фалафель,recipes/images/default_recipe_image.png,"Фалафель из нута с зеленью.",30,2
+Сэндвич с тунцом,recipes/images/default_recipe_image.png,"Сэндвич с тунцом и овощами.",10,3
+Роллы с авокадо,recipes/images/default_recipe_image.png,"Роллы с авокадо и огурцом.",40,4
+Крем-брюле,recipes/images/default_recipe_image.png,"Десерт из сливок с карамельной корочкой.",50,5
+Паста Болоньезе,recipes/images/default_recipe_image.png,"Паста с мясным соусом Болоньезе.",30,6
+Овощной суп,recipes/images/default_recipe_image.png,"Легкий овощной суп с зеленью.",25,7
+Сырники,recipes/images/default_recipe_image.png,"Сырники из творога с изюмом.",20,8
+Куриные котлеты,recipes/images/default_recipe_image.png,"Куриные котлеты с зеленью и специями.",30,9
+Луковый суп,recipes/images/default_recipe_image.png,"Французский луковый суп с сыром.",60,10
+Фриттата,recipes/images/default_recipe_image.png,"Итальянская омлет с овощами.",25,1
+Печенье с шоколадом,recipes/images/default_recipe_image.png,"Печенье с кусочками шоколада.",20,2
+Гаспачо,recipes/images/default_recipe_image.png,"Холодный испанский суп из томатов.",15,3
+Кебаб,recipes/images/default_recipe_image.png",Кебаб из баранины с луком.",45,4
+Банановый хлеб,recipes/images/default_recipe_image.png,"Банановый хлеб с орехами.",60,5
+Тирамису,recipes/images/default_recipe_image.png,"Итальянский десерт с маскарпоне и кофе.",30,6
+Салат Оливье,recipes/images/default_recipe_image.png,"Традиционный русский салат с колбасой.",40,7
+Картофель фри,recipes/images/default_recipe_image.png,"Картофель фри с кетчупом.",30,8
+Яблочные оладьи,recipes/images/default_recipe_image.png,"Оладьи с яблоками и корицей.",20,9
+Цыпленок табака,recipes/images/default_recipe_image.png,"Жареный цыпленок с чесноком и специями.",60,10
