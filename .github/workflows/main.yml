@@ -1,10 +1,6 @@
 name: Main Foodgram workflow
 
-on:
-  push:
-    branches:
-      - releases
-
+on: push
 jobs:
   tests:
     runs-on: ubuntu-latest
