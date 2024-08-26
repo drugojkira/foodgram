@@ -2,10 +2,9 @@ from io import BytesIO
 
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from recipes.models import Recipe
 from rest_framework import status
 from rest_framework.response import Response
-
-from recipes.models import Recipe
 
 
 def add_recipe_to_list(request, serializer, pk):
@@ -48,10 +47,9 @@ def create_file_for_shopping_cart(ingredients):
     virtual_file.seek(0)
 
     # Отправляем файл пользователю
-    response = FileResponse(
+    return FileResponse(
         virtual_file,
         as_attachment=True,
         filename="Shopping List.txt",
         content_type="text/plain",
     )
-    return response

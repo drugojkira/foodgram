@@ -1,34 +1,28 @@
+from api.filters import IngredientSearchFilter, RecipeFilter
+from api.mixins import GetListViewSet
+from api.pagination import FoodgramPagination
+from api.permissions import IsAuthorOrReadOnly
+from api.recipes_utils import (add_recipe_to_list,
+                               create_file_for_shopping_cart,
+                               delete_recipe_from_list)
+from api.serializers import (AvatarSerializer, IngredientSerializer,
+                             RecipeGetSerializer, RecipePostSerializer,
+                             RecipeToFavoriteSerializer,
+                             RecipeToShoppingListSerializer,
+                             SubscriptionsSerializer, TagSerializer,
+                             UserSubscriptionSerializer)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
+from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
+                            UserFavorite, UserShoppingList)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-
-from api.filters import IngredientSearchFilter, RecipeFilter
-from api.mixins import GetListViewSet
-from api.pagination import FoodgramPagination
-from api.permissions import IsAuthorOrReadOnly
-from api.recipes_utils import (
-    add_recipe_to_list,
-    create_file_for_shopping_cart,
-    delete_recipe_from_list
-)
-from api.serializers import (
-    AvatarSerializer, IngredientSerializer,
-    RecipeGetSerializer, RecipePostSerializer,
-    RecipeToFavoriteSerializer, RecipeToShoppingListSerializer,
-    SubscriptionsSerializer, TagSerializer,
-    UserSubscriptionSerializer
-)
-from recipes.models import (
-    Ingredient, Recipe, RecipeIngredient, Tag,
-    UserFavorite, UserShoppingList
-)
 from users.models import UserSubscriptions
 
 User = get_user_model()
