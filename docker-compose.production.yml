@@ -34,5 +34,5 @@ services:
     ports:
       - "8000:80"
     volumes:
-      - media:/media
-      - static:/backend_static
+      - static:/static
+      - media:/app/media/
