@@ -22,10 +22,9 @@ services:
       - media:/app/media
 
   frontend:
-    image: drugojkira/foodgram_frontend
-    command: cp -r /app/build/. /static/
+    image: toomike/foodgram_frontend
     volumes:
-      - static:/static
+      - ./frontend/:/app/result_build/
 
   nginx:
     image: drugojkira/foodgram_gateway
@@ -34,5 +33,7 @@ services:
     ports:
       - "8000:80"
     volumes:
-      - static:/static
-      - media:/app/media/
+      - ./frontend/build:/usr/share/nginx/html/
+      - ./docs/:/usr/share/nginx/html/api/docs/
+      - media:/media
+      - static:/backend_static
