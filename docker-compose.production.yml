@@ -22,7 +22,7 @@ services:
       - media:/app/media
 
   frontend:
-    image: toomike/foodgram_frontend
+    image: drugojkira/foodgram_frontend
     volumes:
       - ./frontend/:/app/result_build/
 
