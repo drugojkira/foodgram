@@ -23,17 +23,16 @@ services:
 
   frontend:
     image: drugojkira/foodgram_frontend
+    command: cp -r /app/build/. /static/
     volumes:
-      - ./frontend/:/app/result_build/
+      - static:/static
 
   nginx:
-    image: drugojkira/foodgram_nginx
+    image: drugojkira/foodgram_gateway
     depends_on:
       - backend
     ports:
       - "8000:80"
     volumes:
-      - ./frontend/build:/usr/share/nginx/html/
-      - ./docs/:/usr/share/nginx/html/api/docs/
-      - media:/media
-      - static:/backend_static
+      - static:/static
+      - media:/app/media/
