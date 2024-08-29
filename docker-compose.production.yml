@@ -13,7 +13,7 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   backend:
-    image: drugojkira/foodgram_backend
+    image: toomike/foodgram_backend
     env_file: .env
     depends_on:
       - db
