@@ -50,7 +50,7 @@ docker compose exec backend python manage.py migrate
 Проект будет доступен по адресу
 
 ```
-http://127.0.0.1:8000/
+http://127.0.0.1:10000/
 ```
 
 # Добавление тестовых данных (пользователи, ингредиенты, теги, рецепты)
@@ -66,6 +66,6 @@ docker compose exec backend python manage.py import_data
 При локальном запуске документация будет доступна по адресу:
 
 ```
-http://127.0.0.1:8000/api/docs/
+http://127.0.0.1:10000/api/docs/
 ```
 
