@@ -5,6 +5,7 @@ from recipes.constants import (MAX_AMOUNT, MEASUREMENT_NAME_MAX_LENGHT,
                                MIN_AMOUNT, NAME_MAX_LENGHT,
                                SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGHT,
                                MeasurementUnit)
+from recipes.short_code_generator import generate_short_code
 
 User = get_user_model()
 
@@ -99,6 +100,11 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.short_url_code:
+            self.short_url_code = generate_short_code()
+        return super().save(*args, **kwargs)
 
 
 # Эта модель нужна, чтобы добавить inlines в админку
