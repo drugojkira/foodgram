@@ -3,10 +3,9 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import serializers
-
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
                             UserFavorite, UserShoppingList)
+from rest_framework import serializers
 from users.models import UserSubscriptions
 
 User = get_user_model()
