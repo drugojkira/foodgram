@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from recipes.constants import (
-    MAX_AMOUNT, MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT,
-    NAME_MAX_LENGTH, SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGTH
-)
+
+from recipes.constants import (MAX_AMOUNT, MEASUREMENT_NAME_MAX_LENGTH,
+                               MIN_AMOUNT, NAME_MAX_LENGTH,
+                               SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGTH)
 from recipes.short_code_generator import generate_short_code
 
 User = get_user_model()

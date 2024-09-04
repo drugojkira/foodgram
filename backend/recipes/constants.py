@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 NAME_MAX_LENGTH = 150
 TAG_NAME_MAX_LENGTH = 50

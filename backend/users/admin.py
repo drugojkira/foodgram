@@ -3,8 +3,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.utils.html import format_html
-from users.models import UserSubscriptions  # Подписки пользователей
-from recipes.models import Recipe  # Рецепты пользователей
+
+from recipes.models import Recipe
+from users.models import UserSubscriptions
 
 User = get_user_model()
 
@@ -25,6 +26,7 @@ class HasRecipesFilter(admin.SimpleListFilter):
             return queryset.filter(author_recipes__isnull=False).distinct()
         if self.value() == 'no':
             return queryset.filter(author_recipes__isnull=True)
+        return None  # Явный return None
 
 
 class HasSubscriptionsFilter(admin.SimpleListFilter):
@@ -43,6 +45,7 @@ class HasSubscriptionsFilter(admin.SimpleListFilter):
             return queryset.filter(subscriptions__isnull=False).distinct()
         if self.value() == 'no':
             return queryset.filter(subscriptions__isnull=True)
+        return None  # Явный return None
 
 
 class HasSubscribersFilter(admin.SimpleListFilter):
@@ -61,6 +64,7 @@ class HasSubscribersFilter(admin.SimpleListFilter):
             return queryset.filter(subscribed_to__isnull=False).distinct()
         if self.value() == 'no':
             return queryset.filter(subscribed_to__isnull=True)
+        return None  # Явный return None
 
 
 class FoodgramUserAdmin(UserAdmin):

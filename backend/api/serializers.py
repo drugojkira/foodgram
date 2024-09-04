@@ -1,17 +1,15 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
-
+from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
-from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag, UserFavorite, UserShoppingList
+from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
+                            UserFavorite, UserShoppingList)
 from users.models import UserSubscriptions
 
 User = get_user_model()
-
-from djoser.serializers import UserSerializer as DjoserUserSerializer
 
 
 class UserSerializer(DjoserUserSerializer):
@@ -22,7 +20,9 @@ class UserSerializer(DjoserUserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     def get_is_subscribed(self, user):
-        """Проверяем, подписан ли текущий пользователь на данного пользователя."""
+        """
+        Проверяем, подписан ли текущий пользователь на данного пользователя.
+        """
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False

@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
-from recipes.models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag, UserFavorite
+
+from recipes.models import (Ingredient, Recipe, RecipeIngredient, RecipeTag,
+                            Tag, UserFavorite)
 
 
 class TagAdmin(admin.ModelAdmin):
@@ -83,7 +85,7 @@ class RecipeAdmin(admin.ModelAdmin):
             f"{ingredient.ingredient.name} "
             f"({ingredient.ingredient.measurement_unit}) — {ingredient.amount}"
             for ingredient in recipe.recipeingredient_set.all()
-]
+        ]
         return mark_safe("<br>".join(ingredients_list))
 
     @admin.display(description="Избранные")
