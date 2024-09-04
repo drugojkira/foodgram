@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from recipes.constants import (MAX_AMOUNT, MEASUREMENT_NAME_MAX_LENGHT,
-                               MIN_AMOUNT, NAME_MAX_LENGHT,
-                               SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGHT,
-                               MeasurementUnit)
+from recipes.constants import (
+    MAX_AMOUNT, MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT,
+    NAME_MAX_LENGTH, SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGTH
+)
 from recipes.short_code_generator import generate_short_code
 
 User = get_user_model()
@@ -13,11 +13,10 @@ User = get_user_model()
 class Ingredient(models.Model):
     """Модель ингредиентов."""
 
-    name = models.CharField("Название", max_length=NAME_MAX_LENGHT)
+    name = models.CharField("Название", max_length=NAME_MAX_LENGTH)
     measurement_unit = models.CharField(
-        "Единицы измерения",
-        choices=MeasurementUnit.choices,
-        max_length=MEASUREMENT_NAME_MAX_LENGHT
+        "Единица измерения",
+        max_length=MEASUREMENT_NAME_MAX_LENGTH
     )
 
     class Meta:
@@ -41,10 +40,10 @@ class Tag(models.Model):
 
     name = models.CharField(
         "Название",
-        max_length=TAG_NAME_MAX_LENGHT,
+        max_length=TAG_NAME_MAX_LENGTH,
         unique=True
     )
-    slug = models.SlugField("Slug", unique=True)
+    slug = models.SlugField("Слаг", unique=True)
 
     class Meta:
         verbose_name = "тег"
@@ -59,13 +58,13 @@ class Tag(models.Model):
 class Recipe(models.Model):
     """Модель рецептов."""
 
-    name = models.CharField("Название", max_length=NAME_MAX_LENGHT)
+    name = models.CharField("Название", max_length=NAME_MAX_LENGTH)
     image = models.ImageField("Картинка", upload_to="recipes/images")
     text = models.TextField("Описание")
     cooking_time = models.PositiveSmallIntegerField(
         "Время приготовления",
         validators=(
-            MinValueValidator(MIN_AMOUNT),
+            MinValueValidator(1),
             MaxValueValidator(MAX_AMOUNT)
         )
     )
@@ -78,16 +77,17 @@ class Recipe(models.Model):
         User,
         verbose_name="Автор",
         on_delete=models.CASCADE,
-        related_name="author_recipes",
+        related_name="author_recipes"
     )
     ingredients = models.ManyToManyField(
         Ingredient,
         through="RecipeIngredient",
         verbose_name="Ингредиенты",
-        related_name="ingredients_recipes",
+        related_name="ingredients_recipes"
     )
     tags = models.ManyToManyField(
-        Tag, through="RecipeTag",
+        Tag,
+        through="RecipeTag",
         verbose_name="Теги",
         related_name="tags_recipes"
     )
@@ -107,12 +107,8 @@ class Recipe(models.Model):
         return super().save(*args, **kwargs)
 
 
-# Эта модель нужна, чтобы добавить inlines в админку
 class RecipeTag(models.Model):
-    """
-    Промежуточная модель тегов и рецептов.
-    Модель нужна для настройки Inline в админке.
-    """
+    """Промежуточная модель тегов и рецептов."""
 
     recipe = models.ForeignKey(
         Recipe,
@@ -122,7 +118,7 @@ class RecipeTag(models.Model):
     tag = models.ForeignKey(Tag, verbose_name="Тег", on_delete=models.CASCADE)
 
     class Meta:
-        default_related_name = "recipetag"
+        default_related_name = "recipetags"
 
 
 class RecipeIngredient(models.Model):
@@ -144,7 +140,7 @@ class RecipeIngredient(models.Model):
     )
 
     class Meta:
-        default_related_name = "recipeingredient"
+        default_related_name = "recipeingredients"
 
 
 class BaseUserList(models.Model):
@@ -158,31 +154,30 @@ class BaseUserList(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         verbose_name="Рецепт",
-        on_delete=models.CASCADE)
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         abstract = True
+        constraints = [
+            models.UniqueConstraint(
+                fields=("user", "recipe"),
+                name="user_recipe_unique"
+            )
+        ]
 
 
 class UserFavorite(BaseUserList):
     """Модель для списка избранного пользователя."""
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=("user", "recipe"), name="userfavorite_unique"
-            )
-        ]
-        default_related_name = 'userfavorite'
+        verbose_name = "избранное"
+        verbose_name_plural = "Избранные"
 
 
 class UserShoppingList(BaseUserList):
     """Модель для списка покупок пользователя."""
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=("user", "recipe"), name="usershoppinglist_unique"
-            ),
-        ]
-        default_related_name = 'usershoppinglist'
+        verbose_name = "список покупок"
+        verbose_name_plural = "Списки покупок"

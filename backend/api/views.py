@@ -2,23 +2,27 @@ from api.filters import IngredientSearchFilter, RecipeFilter
 from api.mixins import GetListViewSet
 from api.pagination import FoodgramPagination
 from api.permissions import IsAuthorOrReadOnly
-from api.recipes_utils import (add_recipe_to_list,
-                               create_file_for_shopping_cart,
-                               delete_recipe_from_list)
-from api.serializers import (AvatarSerializer, IngredientSerializer,
-                             RecipeGetSerializer, RecipePostSerializer,
-                             RecipeToFavoriteSerializer,
-                             RecipeToShoppingListSerializer,
-                             SubscriptionsSerializer, TagSerializer,
-                             UserSubscriptionSerializer)
+from api.recipes_utils import (
+    add_recipe_to_list,
+    create_file_for_shopping_cart,
+    delete_recipe_from_list
+)
+from api.serializers import (
+    AvatarSerializer, IngredientSerializer, RecipeGetSerializer,
+    RecipePostSerializer, RecipeToFavoriteSerializer,
+    RecipeToShoppingListSerializer, SubscriptionsSerializer,
+    TagSerializer, UserSubscriptionSerializer
+)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserFavorite, UserShoppingList)
+from recipes.models import (
+    Ingredient, Recipe, RecipeIngredient, Tag,
+    UserFavorite, UserShoppingList
+)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -28,7 +32,7 @@ from users.models import UserSubscriptions
 User = get_user_model()
 
 
-class UserViewSet(UserViewSet):
+class CustomUserViewSet(UserViewSet):
     """Модифицируем UserViewSet из djoser."""
 
     pagination_class = FoodgramPagination
@@ -59,6 +63,7 @@ class UserViewSet(UserViewSet):
     def delete_avatar(self, request):
         if request.user.avatar:
             request.user.avatar.delete()
+            request.user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -83,15 +88,9 @@ class UserViewSet(UserViewSet):
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id=None):
-        deleted_subscriptions = UserSubscriptions.objects.filter(
-            user=request.user, subscription=get_object_or_404(User, pk=id)
-        ).delete()
-        if deleted_subscriptions[0]:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {"errors": "Вы не были подписаны на этого пользователя"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        subscription = get_object_or_404(UserSubscriptions, user=request.user, subscription_id=id)
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(["get"], permission_classes=(IsAuthenticated,), detail=False)
     def subscriptions(self, request):
