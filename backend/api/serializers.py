@@ -29,6 +29,17 @@ class UserSerializer(DjoserUserSerializer):
             user=request.user, subscription=user
         ).exists()
 
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "is_subscribed"
+        )
+
 
 class AvatarSerializer(serializers.ModelSerializer):
     """Сериализатор для изменения аватара пользователя."""
@@ -107,14 +118,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         ).exists()
 
 
-class RecipeFavoriteSerializer(serializers.ModelSerializer):
-    """Сериализатор для избранных рецептов."""
-
-    class Meta:
-        model = Recipe
-        fields = ("id", "name", "image", "cooking_time")
-
-
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания ингредиентов в рецептах."""
 
@@ -125,7 +128,7 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
         fields = ("amount", "id")
 
 
-class RecipeCreateSerializer(serializers.ModelSerializer):
+class RecipeUpdateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания и обновления рецептов."""
 
     ingredients = RecipeIngredientCreateSerializer(
@@ -138,7 +141,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
-            "ingredients", "tags", "image", "name", "text", "cooking_time"
+            "ingredients",
+            "tags",
+            "image",
+            "name",
+            "text",
+            "cooking_time"
         )
 
     @staticmethod
@@ -146,18 +154,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """Проверка на наличие повторяющихся ингредиентов."""
         ingredient_ids = [ingredient['id'] for ingredient in ingredients]
         if len(ingredient_ids) != len(set(ingredient_ids)):
-            raise ValidationError("Ингредиенты не должны повторяться.")
+            duplicated = [str(ingredient['id']) for ingredient in ingredients if ingredient_ids.count(ingredient['id']) > 1]
+            raise ValidationError(f"Ингредиенты не должны повторяться. Повторяющиеся: {', '.join(duplicated)}.")
         return ingredients
 
     @staticmethod
     def validate_tags(tags):
         """Проверка на уникальность тегов."""
         if len(tags) != len(set(tags)):
-            repeated_tags = [str(tag) for tag in tags]
-            raise ValidationError(
-                "Теги не должны повторяться. "
-                f"Повторяющиеся: {', '.join(repeated_tags)}."
-            )
+            duplicated = [str(tag) for tag in tags if tags.count(tag) > 1]
+            raise ValidationError(f"Теги не должны повторяться. Повторяющиеся: {', '.join(duplicated)}.")
         return tags
 
     @transaction.atomic
@@ -183,13 +189,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def add_ingredients_to_recipe(recipe, ingredients):
-        """Добавление ингредиентов к рецепту."""
+        """Добавление ингредиентов к рецепту с валидацией значений."""
         RecipeIngredient.objects.bulk_create(
             RecipeIngredient(
                 ingredient=ingredient["id"], amount=ingredient["amount"],
                 recipe=recipe
-            )
-            for ingredient in ingredients
+            ) for ingredient in ingredients if ingredient["amount"] > 0
         )
 
 
@@ -204,8 +209,15 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            "email", "id", "username", "first_name", "last_name", "avatar",
-            "is_subscribed", "recipes", "recipes_count"
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "avatar",
+            "is_subscribed",
+            "recipes",
+            "recipes_count"
         )
 
     def get_recipes(self, user):
@@ -222,4 +234,9 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
         if recipes_limit:
             recipes = recipes[:recipes_limit]
 
-        return RecipeFavoriteSerializer(recipes, many=True).data
+        return RecipeSerializer(
+            recipes, many=True, fields=(
+                "id",
+                "name",
+                "image",
+                "cooking_time")).data

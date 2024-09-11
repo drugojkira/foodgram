@@ -1,12 +1,65 @@
+import string
+
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from recipes.constants import (MAX_AMOUNT, MEASUREMENT_NAME_MAX_LENGTH,
-                               MIN_AMOUNT, NAME_MAX_LENGTH,
-                               SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGTH)
+from django.db.models import F, Q
+from django.utils.translation import gettext_lazy as _
+
+from recipes.constants import (
+    MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT, NAME_MAX_LENGTH,
+    SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGTH, NAMES_MAX_LENGTH
+)
 from recipes.short_code_generator import generate_short_code
 
-User = get_user_model()
+# Константы для допустимых символов и запрещённых слов для ника
+ALLOWED_USERNAME_CHARACTERS = string.ascii_letters + string.digits + '._'
+FORBIDDEN_USERNAME_WORDS = ['admin', 'moderator']
+
+
+def validate_username(username):
+    """Функция для валидации поля username."""
+    invalid_chars = [
+        char for char in username if char not in ALLOWED_USERNAME_CHARACTERS
+    ]
+    if invalid_chars:
+        raise ValidationError(
+            _('Ник содержит недопустимые символы: %(invalid_chars)s'),
+            params={'invalid_chars': ''.join(set(invalid_chars))}
+        )
+    if any(
+        forbidden_word in username.lower()
+        for forbidden_word in FORBIDDEN_USERNAME_WORDS
+    ):
+        raise ValidationError(
+            _('Ник содержит запрещённое слово: %(forbidden_word)s'),
+            params={'forbidden_word': ', '.join(FORBIDDEN_USERNAME_WORDS)}
+        )
+
+
+class FoodgramUser(AbstractUser):
+    """Модель пользователя."""
+
+    username = models.CharField(
+        _('username'),
+        max_length=NAMES_MAX_LENGTH,
+        unique=True,
+        validators=[validate_username]
+    )
+    first_name = models.CharField(_('first name'), max_length=NAMES_MAX_LENGTH)
+    last_name = models.CharField(_('last name'), max_length=NAMES_MAX_LENGTH)
+    email = models.EmailField(_('email address'), unique=True)
+    avatar = models.ImageField(_('avatar'), upload_to='users', blank=True)
+
+    REQUIRED_FIELDS = ('first_name', 'last_name', 'username')
+    USERNAME_FIELD = 'email'
+
+    class Meta:
+        verbose_name = _('пользователь')
+        verbose_name_plural = _('пользователи')
+        ordering = ('username',)
 
 
 class Ingredient(models.Model):
@@ -60,11 +113,11 @@ class Recipe(models.Model):
     name = models.CharField("Название", max_length=NAME_MAX_LENGTH)
     image = models.ImageField("Картинка", upload_to="recipes/images")
     text = models.TextField("Описание")
-    cooking_time = models.PositiveSmallIntegerField(
+    cooking_time = models.PositiveIntegerField(
         "Время приготовления",
         validators=(
-            MinValueValidator(1),
-            MaxValueValidator(MAX_AMOUNT)
+            MinValueValidator(MIN_AMOUNT),
+            MaxValueValidator(1000)
         )
     )
     created_at = models.DateTimeField("Время добавления", auto_now_add=True)
@@ -73,7 +126,7 @@ class Recipe(models.Model):
         max_length=SHORT_URL_CODE_MAX_LENGTH
     )
     author = models.ForeignKey(
-        User,
+        FoodgramUser,
         verbose_name="Автор",
         on_delete=models.CASCADE,
         related_name="author_recipes"
@@ -106,54 +159,45 @@ class Recipe(models.Model):
         return super().save(*args, **kwargs)
 
 
-class RecipeTag(models.Model):
-    """Промежуточная модель тегов и рецептов."""
-
-    recipe = models.ForeignKey(
-        Recipe,
-        verbose_name="Рецепт",
-        on_delete=models.CASCADE
-    )
-    tag = models.ForeignKey(Tag, verbose_name="Тег", on_delete=models.CASCADE)
-
-    class Meta:
-        default_related_name = "recipetags"
-
-
 class RecipeIngredient(models.Model):
     """Промежуточная модель ингредиентов и рецептов."""
 
     recipe = models.ForeignKey(
         Recipe,
         verbose_name="Рецепт",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name="recipeingredients"
     )
     ingredient = models.ForeignKey(
         Ingredient, verbose_name="Ингредиент", on_delete=models.CASCADE
     )
-    amount = models.PositiveSmallIntegerField(
+    amount = models.PositiveIntegerField(
         "Количество", validators=(
             MinValueValidator(MIN_AMOUNT),
-            MaxValueValidator(MAX_AMOUNT)
+            MaxValueValidator(1000)
         )
     )
 
     class Meta:
+        verbose_name = "Ингредиент рецепта"
+        verbose_name_plural = "Ингредиенты рецептов"
         default_related_name = "recipeingredients"
 
 
-class BaseUserList(models.Model):
-    """Базовая модель для списков рецептов и пользователя."""
+class BaseUserRecipeList(models.Model):
+    """Базовая модель для списков рецептов пользователя."""
 
     user = models.ForeignKey(
-        User,
+        FoodgramUser,
         verbose_name="Пользователь",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name="%(class)s_user"
     )
     recipe = models.ForeignKey(
         Recipe,
         verbose_name="Рецепт",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name="%(class)s_recipe"
     )
 
     class Meta:
@@ -166,17 +210,47 @@ class BaseUserList(models.Model):
         ]
 
 
-class UserFavorite(BaseUserList):
+class UserFavorite(BaseUserRecipeList):
     """Модель для списка избранного пользователя."""
 
-    class Meta:
+    class Meta(BaseUserRecipeList.Meta):
         verbose_name = "избранное"
         verbose_name_plural = "Избранные"
 
 
-class UserShoppingList(BaseUserList):
+class UserShoppingList(BaseUserRecipeList):
     """Модель для списка покупок пользователя."""
 
-    class Meta:
+    class Meta(BaseUserRecipeList.Meta):
         verbose_name = "список покупок"
         verbose_name_plural = "Списки покупок"
+
+
+class UserSubscriptions(models.Model):
+    """Промежуточная модель для подписок пользователя."""
+
+    user = models.ForeignKey(
+        FoodgramUser,
+        verbose_name=_('Пользователь'),
+        related_name='followers',
+        on_delete=models.CASCADE
+    )
+    author = models.ForeignKey(
+        FoodgramUser,
+        verbose_name=_('Автор'),
+        related_name='authors',
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'author'), name='unique_subscription'
+            ),
+            models.CheckConstraint(
+                check=~Q(user=F('author')),
+                name='prevent_self_subscription'
+            )
+        ]
+        verbose_name = _('подписка')
+        verbose_name_plural = _('подписки')

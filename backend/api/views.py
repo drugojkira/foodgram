@@ -1,34 +1,38 @@
-from api.filters import IngredientSearchFilter, RecipeFilter
-from api.mixins import GetListViewSet
-from api.pagination import FoodgramPagination
-from api.permissions import IsAuthorOrReadOnly
-from api.recipes_utils import (add_recipe_to_list,
-                               create_file_for_shopping_cart,
-                               delete_recipe_from_list)
-from api.serializers import (AvatarSerializer, IngredientSerializer,
-                             RecipeGetSerializer, RecipePostSerializer,
-                             RecipeToFavoriteSerializer,
-                             RecipeToShoppingListSerializer,
-                             SubscriptionsSerializer, TagSerializer,
-                             UserSubscriptionSerializer)
+from datetime import datetime
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserFavorite, UserShoppingList)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+
+from api.filters import IngredientSearchFilter, RecipeFilter
+from api.mixins import GetListViewSet
+from api.pagination import FoodgramPagination
+from api.permissions import IsAuthorOrReadOnly
+from api.recipes_utils import format_shopping_cart
+from api.serializers import (
+    AvatarSerializer, IngredientSerializer,
+    RecipeGetSerializer, RecipeCreateUpdateSerializer,
+    RecipeToShoppingListSerializer, SubscriptionsSerializer,
+    TagSerializer, UserSubscriptionSerializer
+)
+from recipes.models import (
+    Ingredient, Recipe, RecipeIngredient, Tag, UserFavorite, UserShoppingList
+)
 from users.models import UserSubscriptions
 
 User = get_user_model()
 
 
-class CustomUserViewSet(UserViewSet):
+class UserViewSet(UserViewSet):
     """Модифицируем UserViewSet из djoser."""
 
     pagination_class = FoodgramPagination
@@ -57,6 +61,7 @@ class CustomUserViewSet(UserViewSet):
 
     @avatar.mapping.delete
     def delete_avatar(self, request):
+        """Удаление аватара пользователя."""
         if request.user.avatar:
             request.user.avatar.delete()
             request.user.save()
@@ -69,8 +74,7 @@ class CustomUserViewSet(UserViewSet):
     )
     def subscribe(self, request, id=None):
         """
-        Подписываем или удаляем подписку текущего пользователя
-        на другого пользователя.
+        Подписываем текущего пользователя на другого пользователя.
         """
         user = request.user
         subscription = get_object_or_404(User, pk=id)
@@ -83,7 +87,8 @@ class CustomUserViewSet(UserViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
-    def delete_subscribe(self, request, id=None):
+    def unsubscribe(self, request, id=None):
+        """Отписываем текущего пользователя от другого пользователя."""
         subscription = get_object_or_404(
             UserSubscriptions, user=request.user, subscription_id=id
         )
@@ -133,8 +138,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action in ("create", "partial_update"):
-            return RecipePostSerializer
-        return super().get_serializer_class()
+            return RecipeCreateUpdateSerializer
+        return RecipeGetSerializer
 
     @action(["get"], detail=True, url_path="get-link")
     def get_link(self, request, pk=None):
@@ -154,14 +159,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def favorite(self, request, pk=None):
+        """Обработка добавления и удаления рецептов из избранного."""
+        user = request.user
+        recipe = get_object_or_404(Recipe, pk=pk)
+
         if request.method == "POST":
-            return add_recipe_to_list(
-                request=request, pk=pk, serializer=RecipeToFavoriteSerializer
-            )
-        return delete_recipe_from_list(
-            request=request,
-            pk=pk,
-            model=UserFavorite
+            # Проверка, если рецепт уже в избранном
+            if UserFavorite.objects.filter(user=user, recipe=recipe).exists():
+                return Response(
+                    {"detail": "Рецепт уже добавлен в избранное."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Добавление рецепта в избранное
+            UserFavorite.objects.create(user=user, recipe=recipe)
+            return Response(status=status.HTTP_201_CREATED)
+
+        # Удаление рецепта из избранного
+        favorite = UserFavorite.objects.filter(user=user, recipe=recipe)
+        if favorite.exists():
+            favorite.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"detail": "Рецепт не найден в избранном."},
+            status=status.HTTP_400_BAD_REQUEST
         )
 
     @action(
@@ -170,31 +190,58 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def shopping_cart(self, request, pk=None):
+        """Обработка добавления и удаления рецептов из списка покупок."""
+        user = request.user
+        recipe = get_object_or_404(Recipe, pk=pk)
+
         if request.method == "POST":
-            return add_recipe_to_list(
-                request=request,
-                pk=pk,
-                serializer=RecipeToShoppingListSerializer
-            )
-        return delete_recipe_from_list(
-            request=request,
-            pk=pk,
-            model=UserShoppingList
+            # Проверка, если рецепт уже в списке покупок
+            if UserShoppingList.objects.filter(
+                user=user, recipe=recipe
+            ).exists():
+                return Response(
+                    {"detail": "Рецепт уже в списке покупок."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Добавление рецепта в список покупок
+            UserShoppingList.objects.create(user=user, recipe=recipe)
+            return Response(status=status.HTTP_201_CREATED)
+
+        # Удаление рецепта из списка покупок
+        shopping_list = UserShoppingList.objects.filter(
+            user=user, recipe=recipe
+        )
+        if shopping_list.exists():
+            shopping_list.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"detail": "Рецепт не найден в списке покупок."},
+            status=status.HTTP_400_BAD_REQUEST
         )
 
     @action(["get"], detail=False, permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
-        """Скачивание ингредиентов из списка покупок."""
+        """Формирует и скачивает список покупок в виде текстового файла."""
         user = request.user
 
-        ingredients = (
-            RecipeIngredient.objects.filter(
-                recipe__usershoppinglist__user=user
-            ).values(
-                "ingredient__name", "ingredient__measurement_unit"
-            ).annotate(
-                amount=Sum("amount")
-            ).order_by("ingredient__name")
-        )
+        # Получаем ингредиенты и рецепты из списка покупок пользователя
+        ingredients = RecipeIngredient.objects.filter(
+            recipe__usershoppinglist__user=user
+        ).values(
+            "ingredient__name", "ingredient__measurement_unit"
+        ).annotate(amount=Sum("amount")).order_by("ingredient__name")
 
-        return create_file_for_shopping_cart(ingredients)
+        recipes = Recipe.objects.filter(usershoppinglist__user=user)
+
+        # Формируем текст для файла со списком покупок
+        shopping_cart_content = format_shopping_cart(ingredients, recipes)
+
+        # Создаём HTTP-ответ с файлом для скачивания
+        response = HttpResponse(
+            shopping_cart_content, content_type='text/plain'
+        )
+        response[
+            'Content-Disposition'
+        ] = 'attachment; filename="shopping_cart.txt"'
+
+        return response
