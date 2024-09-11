@@ -1,5 +1,3 @@
-from django.db import models
-
 # Константы для рецептов
 NAME_MAX_LENGTH = 150
 TAG_NAME_MAX_LENGTH = 50

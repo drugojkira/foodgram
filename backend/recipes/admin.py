@@ -4,10 +4,8 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-
-from recipes.models import (
-    Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag, UserFavorite, UserSubscriptions
-)
+from recipes.models import (Ingredient, Recipe, RecipeIngredient, RecipeTag,
+                            Tag, UserFavorite)
 
 User = get_user_model()
 
@@ -47,7 +45,9 @@ class HasRecipesFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         has_recipes = self.value() == 'yes'
-        return queryset.filter(author_recipes__isnull=not has_recipes).distinct()
+        return queryset.filter(
+            author_recipes__isnull=not has_recipes
+        ).distinct()
 
 
 class HasSubscriptionsFilter(admin.SimpleListFilter):
@@ -63,7 +63,9 @@ class HasSubscriptionsFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         has_subscriptions = self.value() == 'yes'
-        return queryset.filter(subscriptions__isnull=not has_subscriptions).distinct()
+        return queryset.filter(
+            subscriptions__isnull=not has_subscriptions
+        ).distinct()
 
 
 class HasSubscribersFilter(admin.SimpleListFilter):
@@ -79,7 +81,9 @@ class HasSubscribersFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         has_subscribers = self.value() == 'yes'
-        return queryset.filter(subscribed_to__isnull=not has_subscribers).distinct()
+        return queryset.filter(
+            subscribed_to__isnull=not has_subscribers
+        ).distinct()
 
 
 class TagAdmin(admin.ModelAdmin):
@@ -108,8 +112,19 @@ class RecipeTagInline(admin.TabularInline):
 
 class RecipeAdmin(admin.ModelAdmin):
     """Отображение рецептов с фильтрацией и кастомизированными полями."""
-    list_display = ("name", "author", "created_at", "count_favorites", "display_image")
-    readonly_fields = ("created_at", "short_url_code", "count_favorites", "display_image")
+    list_display = (
+        "name",
+        "author",
+        "created_at",
+        "count_favorites",
+        "display_image"
+    )
+    readonly_fields = (
+        "created_at",
+        "short_url_code",
+        "count_favorites",
+        "display_image"
+    )
     inlines = (RecipeIngredientInline, RecipeTagInline)
     search_fields = (
         "name",
@@ -166,8 +181,12 @@ class FoodgramUserAdmin(UserAdmin):
 
     search_fields = ("username", "email")
     list_display = (
-        "username", "email", "avatar_image", "recipe_count",
-        "subscription_count", "subscriber_count"
+        "username",
+        "email",
+        "avatar_image",
+        "recipe_count",
+        "subscription_count",
+        "subscriber_count"
     )
     list_filter = (
         HasRecipesFilter, HasSubscriptionsFilter, HasSubscribersFilter

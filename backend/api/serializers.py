@@ -154,8 +154,14 @@ class RecipeUpdateSerializer(serializers.ModelSerializer):
         """Проверка на наличие повторяющихся ингредиентов."""
         ingredient_ids = [ingredient['id'] for ingredient in ingredients]
         if len(ingredient_ids) != len(set(ingredient_ids)):
-            duplicated = [str(ingredient['id']) for ingredient in ingredients if ingredient_ids.count(ingredient['id']) > 1]
-            raise ValidationError(f"Ингредиенты не должны повторяться. Повторяющиеся: {', '.join(duplicated)}.")
+            duplicated = [
+                str(ingredient['id']) for ingredient
+                in ingredients if ingredient_ids.count(ingredient['id']) > 1
+            ]
+            raise ValidationError(
+                "Ингредиенты не должны повторяться. "
+                f"Повторяющиеся: {', '.join(duplicated)}."
+            )
         return ingredients
 
     @staticmethod
@@ -163,7 +169,10 @@ class RecipeUpdateSerializer(serializers.ModelSerializer):
         """Проверка на уникальность тегов."""
         if len(tags) != len(set(tags)):
             duplicated = [str(tag) for tag in tags if tags.count(tag) > 1]
-            raise ValidationError(f"Теги не должны повторяться. Повторяющиеся: {', '.join(duplicated)}.")
+            raise ValidationError(
+                "Теги не должны повторяться. "
+                f"Повторяющиеся: {', '.join(duplicated)}."
+            )
         return tags
 
     @transaction.atomic

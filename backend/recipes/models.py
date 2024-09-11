@@ -1,17 +1,14 @@
 import string
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import F, Q
 from django.utils.translation import gettext_lazy as _
-
-from recipes.constants import (
-    MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT, NAME_MAX_LENGTH,
-    SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGTH, NAMES_MAX_LENGTH
-)
+from recipes.constants import (MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT,
+                               NAME_MAX_LENGTH, NAMES_MAX_LENGTH,
+                               SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGTH)
 from recipes.short_code_generator import generate_short_code
 
 # Константы для допустимых символов и запрещённых слов для ника
