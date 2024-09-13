@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.urls import path
-
 from recipes import views
 
 urlpatterns = [

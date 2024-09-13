@@ -5,12 +5,10 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import F, Q
-from recipes.constants import (
-    MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT, NAME_MAX_LENGTH,
-    SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGTH
-)
+from recipes.constants import (MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT,
+                               NAME_MAX_LENGTH, SHORT_URL_CODE_MAX_LENGTH,
+                               TAG_NAME_MAX_LENGTH)
 from recipes.short_code_generator import generate_short_code
-
 
 USERNAME_REGEX = re.compile(r'^[a-zA-Z0-9._]+$')
 

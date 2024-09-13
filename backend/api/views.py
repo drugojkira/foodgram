@@ -1,32 +1,25 @@
+from api.filters import IngredientSearchFilter, RecipeFilter
+from api.mixins import GetListViewSet
+from api.pagination import FoodgramPagination
+from api.permissions import IsAuthorOrReadOnly
+from api.recipes_utils import format_shopping_cart
+from api.serializers import (AvatarSerializer, IngredientSerializer,
+                             RecipeCreateUpdateSerializer, RecipeGetSerializer,
+                             SubscriptionsSerializer, TagSerializer)
 from django.conf import settings
-
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from rest_framework import status, mixins, viewsets
+from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
+                            UserFavorite, UserShoppingList)
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-
-from api.filters import IngredientSearchFilter, RecipeFilter
-from api.mixins import GetListViewSet
-from api.pagination import FoodgramPagination
-from api.permissions import IsAuthorOrReadOnly
-from api.recipes_utils import format_shopping_cart
-from api.serializers import (
-    AvatarSerializer, IngredientSerializer,
-    RecipeCreateUpdateSerializer, RecipeGetSerializer,
-    SubscriptionsSerializer, TagSerializer,
-)
-from recipes.models import (
-    Ingredient, Recipe, RecipeIngredient, Tag,
-    UserFavorite, UserShoppingList
-)
 from users.models import UserSubscriptions
-
 
 User = get_user_model()
 
