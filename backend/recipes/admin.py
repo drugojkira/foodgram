@@ -1,34 +1,34 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import Group
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext_lazy as _
-from recipes.models import (Ingredient, Recipe, RecipeIngredient, RecipeTag,
-                            Tag, UserFavorite)
+from recipes.models import (
+    Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag, UserFavorite
+)
 
 User = get_user_model()
 
 
 class CookingTimeFilter(admin.SimpleListFilter):
     """Фильтр по времени готовки."""
-    title = _("Время готовки")
+    title = "Время готовки"
     parameter_name = "cooking_time"
 
     def lookups(self, request, model_admin):
         return [
-            ('fast', _("Быстрее 30 мин")),
-            ('medium', _("Быстрее 60 мин")),
-            ('long', _("Дольше 60 мин")),
+            ('fast', "Быстрее 30 мин"),
+            ('medium', "Быстрее 60 мин"),
+            ('long', "Дольше 60 мин"),
         ]
 
     def queryset(self, request, queryset):
+        # Объединяем фильтры через использование `range`
         if self.value() == 'fast':
             return queryset.filter(cooking_time__lt=30)
-        elif self.value() == 'medium':
-            return queryset.filter(cooking_time__lt=60, cooking_time__gte=30)
-        elif self.value() == 'long':
-            return queryset.filter(cooking_time__gte=60)
+        if self.value() == 'medium':
+            return queryset.filter(cooking_time__range=(30, 60))
+        if self.value() == 'long':
+            return queryset.filter(cooking_time__gt=60)
         return queryset
 
 
@@ -89,13 +89,23 @@ class HasSubscribersFilter(admin.SimpleListFilter):
 class TagAdmin(admin.ModelAdmin):
     """Отображение тегов."""
     search_fields = ("name",)
+    # Добавлено явно отображаемое поле для количества применений
+    list_display = ("name", "slug", "recipes_count")
+
+    def recipes_count(self, tag):
+        """Количество рецептов, использующих данный тег."""
+        return tag.tags_recipes.count()
 
 
 class IngredientAdmin(admin.ModelAdmin):
     """Отображение ингредиентов с фильтром по единицам измерения и тегам."""
-    search_fields = ("name", "tags__name")  # Поиск по имени и тегам
-    list_display = ("name", "measurement_unit")  # Отображение единиц измерения
+    search_fields = ("name", "tags__name")
+    list_display = ("name", "measurement_unit", "recipes_count")
     list_filter = ("measurement_unit",)  # Фильтр по единицам измерения
+
+    def recipes_count(self, ingredient):
+        """Количество рецептов, использующих данный ингредиент."""
+        return ingredient.ingredients_recipes.count()
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -167,13 +177,13 @@ class RecipeAdmin(admin.ModelAdmin):
                 f"{ingredient.ingredient.name} "
                 f"({ingredient.ingredient.measurement_unit}) — "
                 f"{ingredient.amount}"
-                for ingredient in recipe.ingredients.all()
+                for ingredient in recipe.recipeingredients.all()
             )
         )
 
     @admin.display(description="Избранные")
     def count_favorites(self, recipe):
-        return recipe.userfavorite.count()
+        return recipe.user_favorites.count()
 
 
 class FoodgramUserAdmin(UserAdmin):
@@ -199,30 +209,29 @@ class FoodgramUserAdmin(UserAdmin):
             return mark_safe(
                 f'<img src="{user.avatar.url}" '
                 f'style="width: 50px; height:50px;" />'
+
             )
         return "Нет аватара"
 
     @admin.display(description="Рецепты")
     def recipe_count(self, user):
         """Количество рецептов пользователя."""
-        return user.author_recipes.count()
+        return user.recipes.count()
 
     @admin.display(description="Подписки")
     def subscription_count(self, user):
         """Количество подписок пользователя."""
-        return user.subscriptions.count()
+        return user.followers.count()
 
     @admin.display(description="Подписчики")
     def subscriber_count(self, user):
         """Количество подписчиков пользователя."""
-        return user.subscribed_to.count()
+        return user.authors.count()
 
 
-# Регистрация моделей в админке
 admin.site.register(User, FoodgramUserAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(UserFavorite)
 admin.site.register(RecipeIngredient)
-admin.site.unregister(Group)

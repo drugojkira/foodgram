@@ -18,6 +18,14 @@ class UserSerializer(DjoserUserSerializer):
 
     is_subscribed = serializers.SerializerMethodField()
 
+    class Meta:
+        model = User
+        # Используем поля базового класса, добавляем is_subscribed и avatar
+        fields = DjoserUserSerializer.Meta.fields + (
+            "is_subscribed",
+            "avatar",
+        )
+
     def get_is_subscribed(self, user):
         """
         Проверяем, подписан ли текущий пользователь на данного пользователя.
@@ -28,17 +36,6 @@ class UserSerializer(DjoserUserSerializer):
         return UserSubscriptions.objects.filter(
             user=request.user, subscription=user
         ).exists()
-
-    class Meta:
-        model = User
-        fields = (
-            "id",
-            "email",
-            "username",
-            "first_name",
-            "last_name",
-            "is_subscribed"
-        )
 
 
 class AvatarSerializer(serializers.ModelSerializer):
@@ -128,7 +125,7 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
         fields = ("amount", "id")
 
 
-class RecipeUpdateSerializer(serializers.ModelSerializer):
+class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания и обновления рецептов."""
 
     ingredients = RecipeIngredientCreateSerializer(
@@ -154,31 +151,32 @@ class RecipeUpdateSerializer(serializers.ModelSerializer):
         """Проверка на наличие повторяющихся ингредиентов."""
         ingredient_ids = [ingredient['id'] for ingredient in ingredients]
         if len(ingredient_ids) != len(set(ingredient_ids)):
-            duplicated = [
-                str(ingredient['id']) for ingredient
-                in ingredients if ingredient_ids.count(ingredient['id']) > 1
-            ]
-            raise ValidationError(
-                "Ингредиенты не должны повторяться. "
-                f"Повторяющиеся: {', '.join(duplicated)}."
-            )
+            raise ValidationError("Ингредиенты не должны повторяться.")
         return ingredients
 
     @staticmethod
     def validate_tags(tags):
         """Проверка на уникальность тегов."""
         if len(tags) != len(set(tags)):
-            duplicated = [str(tag) for tag in tags if tags.count(tag) > 1]
-            raise ValidationError(
-                "Теги не должны повторяться. "
-                f"Повторяющиеся: {', '.join(duplicated)}."
-            )
+            raise ValidationError("Теги не должны повторяться.")
         return tags
+
+    @staticmethod
+    def validate_ingredient_amounts(ingredients):
+        """Проверка на корректные значения количества ингредиентов."""
+        for ingredient in ingredients:
+            if ingredient["amount"] <= 0:
+                raise ValidationError(
+                    f"Количество ингредиента {ingredient['id']} "
+                    "должно быть больше нуля."
+                )
+        return ingredients
 
     @transaction.atomic
     def create(self, validated_data):
         ingredients = validated_data.pop("recipeingredient")
         tags = validated_data.pop("tags")
+        self.validate_ingredient_amounts(ingredients)
         recipe = Recipe.objects.create(
             **validated_data, author=self.context["request"].user
         )
@@ -190,6 +188,7 @@ class RecipeUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         ingredients = validated_data.pop("recipeingredient")
         tags = validated_data.pop("tags")
+        self.validate_ingredient_amounts(ingredients)
         instance.tags.clear()
         instance.tags.set(tags)
         RecipeIngredient.objects.filter(recipe=instance).delete()
@@ -203,7 +202,7 @@ class RecipeUpdateSerializer(serializers.ModelSerializer):
             RecipeIngredient(
                 ingredient=ingredient["id"], amount=ingredient["amount"],
                 recipe=recipe
-            ) for ingredient in ingredients if ingredient["amount"] > 0
+            ) for ingredient in ingredients
         )
 
 

@@ -1,26 +1,32 @@
+from django.conf import settings
+
+from django.contrib.auth import get_user_model
+from django.db.models import Sum
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
+from rest_framework import status, mixins, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+
 from api.filters import IngredientSearchFilter, RecipeFilter
 from api.mixins import GetListViewSet
 from api.pagination import FoodgramPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.recipes_utils import format_shopping_cart
-from api.serializers import (AvatarSerializer, IngredientSerializer,
-                             RecipeCreateUpdateSerializer, RecipeGetSerializer,
-                             SubscriptionsSerializer, TagSerializer,
-                             UserSubscriptionSerializer)
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db.models import Sum
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
-from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserFavorite, UserShoppingList)
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
+from api.serializers import (
+    AvatarSerializer, IngredientSerializer,
+    RecipeCreateUpdateSerializer, RecipeGetSerializer,
+    SubscriptionsSerializer, TagSerializer,
+)
+from recipes.models import (
+    Ingredient, Recipe, RecipeIngredient, Tag,
+    UserFavorite, UserShoppingList
+)
 from users.models import UserSubscriptions
+
 
 User = get_user_model()
 
@@ -70,20 +76,41 @@ class UserViewSet(UserViewSet):
         Подписываем текущего пользователя на другого пользователя.
         """
         user = request.user
-        subscription = get_object_or_404(User, pk=id)
-        data = {"user": user.id, "subscription": subscription.id}
-        serializer = UserSubscriptionSerializer(
-            data=data, context={"request": request}
+        subscription_user = get_object_or_404(User, pk=id)
+
+        # Проверка на самоподписку
+        if user == subscription_user:
+            return Response(
+                {"detail": "Нельзя подписаться на самого себя."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Проверка, существует ли уже подписка
+        if UserSubscriptions.objects.filter(
+            user=user, author=subscription_user
+        ).exists():
+            return Response(
+                {"detail": "Вы уже подписаны на этого пользователя."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Создание подписки
+        UserSubscriptions.objects.create(user=user, author=subscription_user)
+        return Response(
+            {
+                "detail": (
+                    f"Подписка на пользователя {subscription_user.username} "
+                    "успешно оформлена."
+                )
+            },
+            status=status.HTTP_201_CREATED
         )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
     def unsubscribe(self, request, id=None):
         """Отписываем текущего пользователя от другого пользователя."""
         subscription = get_object_or_404(
-            UserSubscriptions, user=request.user, subscription_id=id
+            UserSubscriptions, user=request.user, author_id=id
         )
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -157,25 +184,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
 
         if request.method == "POST":
-            # Проверка, если рецепт уже в избранном
-            if UserFavorite.objects.filter(user=user, recipe=recipe).exists():
+            # Объединение проверки на наличие и создание через get_or_create
+            favorite, created = UserFavorite.objects.get_or_create(
+                user=user, recipe=recipe
+            )
+
+            if not created:
                 return Response(
                     {"detail": "Рецепт уже добавлен в избранное."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            # Добавление рецепта в избранное
-            UserFavorite.objects.create(user=user, recipe=recipe)
+
             return Response(status=status.HTTP_201_CREATED)
 
-        # Удаление рецепта из избранного
-        favorite = UserFavorite.objects.filter(user=user, recipe=recipe)
-        if favorite.exists():
-            favorite.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {"detail": "Рецепт не найден в избранном."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        # Удаление рецепта из избранного через get_object_or_404 и delete
+        favorite = get_object_or_404(UserFavorite, user=user, recipe=recipe)
+        favorite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         ["post", "delete"],
@@ -188,29 +213,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
 
         if request.method == "POST":
-            # Проверка, если рецепт уже в списке покупок
-            if UserShoppingList.objects.filter(
+            # Объединение проверки на наличие и создание через get_or_create
+            shopping_list, created = UserShoppingList.objects.get_or_create(
                 user=user, recipe=recipe
-            ).exists():
+            )
+
+            if not created:
                 return Response(
                     {"detail": "Рецепт уже в списке покупок."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            # Добавление рецепта в список покупок
-            UserShoppingList.objects.create(user=user, recipe=recipe)
+
             return Response(status=status.HTTP_201_CREATED)
 
-        # Удаление рецепта из списка покупок
-        shopping_list = UserShoppingList.objects.filter(
-            user=user, recipe=recipe
+        # Удаление рецепта из списка покупок через get_object_or_404 и delete
+        shopping_list = get_object_or_404(
+            UserShoppingList, user=user, recipe=recipe
         )
-        if shopping_list.exists():
-            shopping_list.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {"detail": "Рецепт не найден в списке покупок."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        shopping_list.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(["get"], detail=False, permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
@@ -229,12 +250,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         # Формируем текст для файла со списком покупок
         shopping_cart_content = format_shopping_cart(ingredients, recipes)
 
-        # Создаём HTTP-ответ с файлом для скачивания
-        response = HttpResponse(
-            shopping_cart_content, content_type='text/plain'
+        # Создаём FileResponse вместо HttpResponse
+        return FileResponse(
+            shopping_cart_content, as_attachment=True,
+            filename="shopping_cart.txt"
         )
-        response[
-            'Content-Disposition'
-        ] = 'attachment; filename="shopping_cart.txt"'
 
-        return response
+
+class GetListViewSet(
+        mixins.ListModelMixin,
+        mixins.RetrieveModelMixin,
+        viewsets.GenericViewSet,
+):
+    """ViewSet для методов Get, List"""

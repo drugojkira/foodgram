@@ -74,9 +74,16 @@ docker compose exec backend python manage.py import_data
 git clone https://github.com/drugojkira/foodgram.git
 ```
 
+- Перейдите в папку с проектом:
+
+```bash
+cd foodgram
+```
+
 - Установить и активировать виртуальное окружение
 
 ```bash
+python -m venv venv
 source /venv/bin/activate
 ```
 
@@ -97,6 +104,7 @@ POSTGRES_PASSWORD=postgres # пароль для подключения к БД 
 DB_HOST=db # название сервиса (контейнера)
 DB_PORT=5432 # порт для подключения к БД
 DEBUG=0
+DJANGO_ENV=production
 ```
 
 ### Выполните миграции:
@@ -109,7 +117,7 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-- Создание нового супер пользователя 
+- Создание нового суперпользователя (опционально): 
 ```bash
 python manage.py createsuperuser
 ```
@@ -120,6 +128,5 @@ python manage.py collectstatic --no-input
 ```
 ### Заполните базу тестовыми данными: 
 ```bash
-python manage.py add_tags_from_data
-python manage.py add_ingidients_from_data 
+python manage.py import_data
 ```
