@@ -1,7 +1,6 @@
-from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import (MaxValueValidator, MinValueValidator,
+                                    RegexValidator)
 from django.db import models
 from django.db.models import F, Q
 from recipes.constants import (MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT,
