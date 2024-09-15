@@ -5,6 +5,7 @@ from django.utils.safestring import mark_safe
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, RecipeTag,
                             Tag, UserFavorite)
 
+
 User = get_user_model()
 
 
@@ -21,13 +22,15 @@ class CookingTimeFilter(admin.SimpleListFilter):
         ]
 
     def queryset(self, request, queryset):
-        # Объединяем фильтры через использование `range`
-        if self.value() == 'fast':
-            return queryset.filter(cooking_time__lt=30)
-        if self.value() == 'medium':
-            return queryset.filter(cooking_time__range=(30, 60))
-        if self.value() == 'long':
-            return queryset.filter(cooking_time__gt=60)
+        value_map = {
+            'fast': (0, 30),
+            'medium': (30, 60),
+            'long': (60, 10000)  # Условный большой предел для долгих рецептов
+        }
+        value = self.value()
+        if value:
+            min_time, max_time = value_map[value]
+            return queryset.filter(cooking_time__range=(min_time, max_time))
         return queryset
 
 
@@ -88,23 +91,22 @@ class HasSubscribersFilter(admin.SimpleListFilter):
 class TagAdmin(admin.ModelAdmin):
     """Отображение тегов."""
     search_fields = ("name",)
-    # Добавлено явно отображаемое поле для количества применений
     list_display = ("name", "slug", "recipes_count")
 
     def recipes_count(self, tag):
         """Количество рецептов, использующих данный тег."""
-        return tag.tags_recipes.count()
+        return tag.recipes.count()
 
 
 class IngredientAdmin(admin.ModelAdmin):
-    """Отображение ингредиентов с фильтром по единицам измерения и тегам."""
-    search_fields = ("name", "tags__name")
+    """Отображение ингредиентов с фильтром по единицам измерения."""
+    search_fields = ("name",)
     list_display = ("name", "measurement_unit", "recipes_count")
-    list_filter = ("measurement_unit",)  # Фильтр по единицам измерения
+    list_filter = ("measurement_unit",)
 
     def recipes_count(self, ingredient):
         """Количество рецептов, использующих данный ингредиент."""
-        return ingredient.ingredients_recipes.count()
+        return ingredient.recipes.count()
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -208,7 +210,6 @@ class FoodgramUserAdmin(UserAdmin):
             return mark_safe(
                 f'<img src="{user.avatar.url}" '
                 f'style="width: 50px; height:50px;" />'
-
             )
         return "Нет аватара"
 

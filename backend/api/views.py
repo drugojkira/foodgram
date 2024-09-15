@@ -1,31 +1,33 @@
+import re
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.conf import settings
+from django.db.models import Sum
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet as DjoserUserViewSet
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
+                            UserFavorite, UserShoppingList)
+from users.models import UserSubscriptions
 from api.filters import IngredientSearchFilter, RecipeFilter
-from api.mixins import GetListViewSet
 from api.pagination import FoodgramPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.recipes_utils import format_shopping_cart
 from api.serializers import (AvatarSerializer, IngredientSerializer,
                              RecipeCreateUpdateSerializer, RecipeGetSerializer,
                              SubscriptionsSerializer, TagSerializer)
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db.models import Sum
-from django.http import FileResponse
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
-from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserFavorite, UserShoppingList)
-from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from users.models import UserSubscriptions
 
 User = get_user_model()
 
 
-class UserViewSet(UserViewSet):
-    """Модифицируем UserViewSet из djoser."""
+class CustomUserViewSet(DjoserUserViewSet):
+    """Модифицированный UserViewSet из djoser."""
 
     pagination_class = FoodgramPagination
 
@@ -60,14 +62,12 @@ class UserViewSet(UserViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-        ["post"],
+        ["post", "delete"],
         detail=True,
         permission_classes=(IsAuthenticated,)
     )
     def subscribe(self, request, id=None):
-        """
-        Подписываем текущего пользователя на другого пользователя.
-        """
+        """Подписываем текущего пользователя на другого пользователя."""
         user = request.user
         subscription_user = get_object_or_404(User, pk=id)
 
@@ -78,17 +78,15 @@ class UserViewSet(UserViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Проверка, существует ли уже подписка
-        if UserSubscriptions.objects.filter(
+        subscription, created = UserSubscriptions.objects.get_or_create(
             user=user, author=subscription_user
-        ).exists():
+        )
+        if not created:
             return Response(
                 {"detail": "Вы уже подписаны на этого пользователя."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Создание подписки
-        UserSubscriptions.objects.create(user=user, author=subscription_user)
         return Response(
             {
                 "detail": (
@@ -118,24 +116,6 @@ class UserViewSet(UserViewSet):
             page, many=True, context={"request": request}
         )
         return self.get_paginated_response(serializer.data)
-
-
-class IngredientViewSet(GetListViewSet):
-    """Представление для получения ингредиентов."""
-
-    queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer
-    permission_classes = (AllowAny,)
-    filter_backends = (IngredientSearchFilter,)
-    search_fields = ("name",)
-
-
-class TagViewSet(GetListViewSet):
-    """Представление для получения тегов."""
-
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
-    permission_classes = (AllowAny,)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -173,27 +153,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk=None):
         """Обработка добавления и удаления рецептов из избранного."""
-        user = request.user
-        recipe = get_object_or_404(Recipe, pk=pk)
-
-        if request.method == "POST":
-            # Объединение проверки на наличие и создание через get_or_create
-            favorite, created = UserFavorite.objects.get_or_create(
-                user=user, recipe=recipe
-            )
-
-            if not created:
-                return Response(
-                    {"detail": "Рецепт уже добавлен в избранное."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            return Response(status=status.HTTP_201_CREATED)
-
-        # Удаление рецепта из избранного через get_object_or_404 и delete
-        favorite = get_object_or_404(UserFavorite, user=user, recipe=recipe)
-        favorite.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return self._handle_favorite_or_cart(request, pk, UserFavorite)
 
     @action(
         ["post", "delete"],
@@ -202,28 +162,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         """Обработка добавления и удаления рецептов из списка покупок."""
+        return self._handle_favorite_or_cart(request, pk, UserShoppingList)
+
+    def _handle_favorite_or_cart(self, request, pk, model_class):
+        """Обработчик для добавления и удаления рецептов из списков."""
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
 
         if request.method == "POST":
-            # Объединение проверки на наличие и создание через get_or_create
-            shopping_list, created = UserShoppingList.objects.get_or_create(
+            obj, created = model_class.objects.get_or_create(
                 user=user, recipe=recipe
             )
-
             if not created:
                 return Response(
-                    {"detail": "Рецепт уже в списке покупок."},
+                    {"detail": "Рецепт уже добавлен."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
             return Response(status=status.HTTP_201_CREATED)
 
-        # Удаление рецепта из списка покупок через get_object_or_404 и delete
-        shopping_list = get_object_or_404(
-            UserShoppingList, user=user, recipe=recipe
-        )
-        shopping_list.delete()
+        obj = get_object_or_404(model_class, user=user, recipe=recipe)
+        obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(["get"], detail=False, permission_classes=(IsAuthenticated,))
@@ -243,16 +201,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         # Формируем текст для файла со списком покупок
         shopping_cart_content = format_shopping_cart(ingredients, recipes)
 
-        # Создаём FileResponse вместо HttpResponse
         return FileResponse(
             shopping_cart_content, as_attachment=True,
             filename="shopping_cart.txt"
         )
-
-
-class GetListViewSet(
-        mixins.ListModelMixin,
-        mixins.RetrieveModelMixin,
-        viewsets.GenericViewSet,
-):
-    """ViewSet для методов Get, List"""

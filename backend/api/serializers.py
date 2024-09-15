@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
+from recipes.constants import MIN_AMOUNT
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
                             UserFavorite, UserShoppingList)
 from rest_framework import serializers
@@ -151,25 +152,41 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         """Проверка на наличие повторяющихся ингредиентов."""
         ingredient_ids = [ingredient['id'] for ingredient in ingredients]
         if len(ingredient_ids) != len(set(ingredient_ids)):
-            raise ValidationError("Ингредиенты не должны повторяться.")
+            duplicated_ingredients = [
+                ingredient['id'] for ingredient in ingredients
+                if ingredient_ids.count(ingredient['id']) > 1
+            ]
+            raise ValidationError(
+                f"Ингредиенты не должны повторяться. Повторяющиеся: "
+                f"{', '.join(map(str, set(duplicated_ingredients)))}."
+            )
         return ingredients
 
     @staticmethod
     def validate_tags(tags):
         """Проверка на уникальность тегов."""
         if len(tags) != len(set(tags)):
-            raise ValidationError("Теги не должны повторяться.")
+            duplicated_tags = [tag for tag in tags if tags.count(tag) > 1]
+            raise ValidationError(
+                f"Теги не должны повторяться. Повторяющиеся: "
+                f"{', '.join(map(str, set(duplicated_tags)))}."
+            )
         return tags
 
     @staticmethod
     def validate_ingredient_amounts(ingredients):
         """Проверка на корректные значения количества ингредиентов."""
-        for ingredient in ingredients:
-            if ingredient["amount"] <= 0:
-                raise ValidationError(
-                    f"Количество ингредиента {ingredient['id']} "
-                    "должно быть больше нуля."
-                )
+        invalid_ingredients = [
+            ingredient['id'] for ingredient in ingredients
+            if ingredient['amount'] <= MIN_AMOUNT
+        ]
+        if invalid_ingredients:
+            raise ValidationError(
+                f"Количество ингредиентов "
+                f"{', '.join(map(str, invalid_ingredients))} больше чем "
+                f"{MIN_AMOUNT}."
+
+            )
         return ingredients
 
     @transaction.atomic
@@ -206,26 +223,21 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         )
 
 
-class SubscriptionsSerializer(serializers.ModelSerializer):
+class SubscriptionsSerializer(DjoserUserSerializer):
     """Сериализатор для списка подписок пользователя."""
 
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(
         source="author_recipes.count", read_only=True
     )
+    is_subscribed = serializers.SerializerMethodField()
 
-    class Meta:
+    class Meta(DjoserUserSerializer.Meta):
         model = User
-        fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "avatar",
-            "is_subscribed",
+        fields = DjoserUserSerializer.Meta.fields + (
             "recipes",
-            "recipes_count"
+            "recipes_count",
+            "is_subscribed",
         )
 
     def get_recipes(self, user):

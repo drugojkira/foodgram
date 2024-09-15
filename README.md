@@ -112,21 +112,17 @@ DJANGO_ENV=production
 python manage.py migrate
 ```
 
-- В папке с файлом manage.py выполнить команду:
-```bash
-python manage.py runserver
-```
-
 - Создание нового суперпользователя (опционально): 
 ```bash
 python manage.py createsuperuser
 ```
 
-### Загрузите статику:
-```bash
-python manage.py collectstatic --no-input
-```
 ### Заполните базу тестовыми данными: 
 ```bash
 python manage.py import_data
+```
+
+- В папке с файлом manage.py выполнить команду:
+```bash
+python manage.py runserver
 ```

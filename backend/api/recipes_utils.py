@@ -9,9 +9,9 @@ def format_shopping_cart(ingredients, recipes):
 
     # Заголовки и нумерация продуктов
     ingredients = [
-        f"{index + 1}. {item['ingredient__name'].capitalize()} – "
+        f"{index}. {item['ingredient__name'].capitalize()} – "
         f"{item['amount']} {item['ingredient__measurement_unit']}"
-        for index, item in enumerate(ingredients)
+        for index, item in enumerate(ingredients, 1)
     ]
 
     # Перечень рецептов
