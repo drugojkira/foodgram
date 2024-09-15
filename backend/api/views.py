@@ -2,9 +2,8 @@ from api.filters import RecipeFilter
 from api.pagination import FoodgramPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.recipes_utils import format_shopping_cart
-from api.serializers import (AvatarSerializer,
-                             RecipeCreateUpdateSerializer, RecipeGetSerializer,
-                             SubscriptionsSerializer)
+from api.serializers import (AvatarSerializer, RecipeCreateUpdateSerializer,
+                             RecipeGetSerializer, SubscriptionsSerializer)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
@@ -12,8 +11,8 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
-from recipes.models import (Recipe, RecipeIngredient,
-                            UserFavorite, UserShoppingList)
+from recipes.models import (Recipe, RecipeIngredient, UserFavorite,
+                            UserShoppingList)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
