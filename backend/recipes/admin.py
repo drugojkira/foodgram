@@ -2,10 +2,14 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
-from recipes.models import (Ingredient, Recipe, RecipeIngredient, RecipeTag,
-                            Tag, UserFavorite)
+from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
+                            UserFavorite)
 
 User = get_user_model()
+
+FAST_COOKING_TIME = (0, 30)
+MEDIUM_COOKING_TIME = (30, 60)
+LONG_COOKING_TIME = (60, 10000)
 
 
 class CookingTimeFilter(admin.SimpleListFilter):
@@ -15,20 +19,15 @@ class CookingTimeFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [
-            ('fast', "Быстрее 30 мин"),
-            ('medium', "Быстрее 60 мин"),
-            ('long', "Дольше 60 мин"),
+            (FAST_COOKING_TIME, "Быстрее 30 мин"),
+            (MEDIUM_COOKING_TIME, "Быстрее 60 мин"),
+            (LONG_COOKING_TIME, "Дольше 60 мин"),
         ]
 
     def queryset(self, request, queryset):
-        value_map = {
-            'fast': (0, 30),
-            'medium': (30, 60),
-            'long': (60, 10000)  # Условный большой предел для долгих рецептов
-        }
         value = self.value()
         if value:
-            min_time, max_time = value_map[value]
+            min_time, max_time = eval(value)
             return queryset.filter(cooking_time__range=(min_time, max_time))
         return queryset
 
@@ -116,7 +115,7 @@ class RecipeIngredientInline(admin.TabularInline):
 
 class RecipeTagInline(admin.TabularInline):
     """Отображение тегов рецепта."""
-    model = RecipeTag
+    model = Recipe.tags.through  # Используем связь ManyToMany через `through`
     extra = 1
 
 
@@ -152,17 +151,18 @@ class RecipeAdmin(admin.ModelAdmin):
         "short_url_code",
         "author",
         "cooking_time",
-        "count_favorites",  # Отображение числа избранных
-        "display_tags",  # Отображение тегов
-        "display_ingredients",  # Отображение ингредиентов
+        "count_favorites",
+        "display_tags",
+        "display_ingredients",
     )
 
-    @admin.display(description="Изображение")
+    @admin.display(description='Изображение')
     def display_image(self, recipe):
         """Отображение картинки в админке."""
         if recipe.image:
             return mark_safe(
-                f'<img src="{recipe.image.url}" width="150" height="150" />'
+                f'<img src="{recipe.image.url}" '
+                f'width="150" height="150" />'
             )
         return "Изображение отсутствует"
 

@@ -158,7 +158,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             ]
             raise ValidationError(
                 f"Ингредиенты не должны повторяться. Повторяющиеся: "
-                f"{', '.join(map(str, set(duplicated_ingredients)))}."
+                f"{set(duplicated_ingredients)}."
             )
         return ingredients
 
@@ -169,7 +169,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             duplicated_tags = [tag for tag in tags if tags.count(tag) > 1]
             raise ValidationError(
                 f"Теги не должны повторяться. Повторяющиеся: "
-                f"{', '.join(map(str, set(duplicated_tags)))}."
+                f"{set(duplicated_tags)}."
             )
         return tags
 
@@ -178,14 +178,12 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         """Проверка на корректные значения количества ингредиентов."""
         invalid_ingredients = [
             ingredient['id'] for ingredient in ingredients
-            if ingredient['amount'] <= MIN_AMOUNT
+            if ingredient['amount'] < MIN_AMOUNT
         ]
         if invalid_ingredients:
             raise ValidationError(
-                f"Количество ингредиентов "
-                f"{', '.join(map(str, invalid_ingredients))} больше чем "
-                f"{MIN_AMOUNT}."
-
+                f"Количество для следующих ингредиентов {invalid_ingredients} "
+                f"должно быть больше или равно {MIN_AMOUNT}."
             )
         return ingredients
 

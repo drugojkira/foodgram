@@ -119,7 +119,9 @@ python manage.py createsuperuser
 
 ### Заполните базу тестовыми данными: 
 ```bash
-python manage.py import_data
+python manage.py loaddata data/ingredients.json
+python manage.py loaddata data/tags.json
+
 ```
 
 - В папке с файлом manage.py выполнить команду:

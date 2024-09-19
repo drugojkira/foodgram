@@ -2,8 +2,9 @@ from api.filters import RecipeFilter
 from api.pagination import FoodgramPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.recipes_utils import format_shopping_cart
-from api.serializers import (AvatarSerializer, RecipeCreateUpdateSerializer,
-                             RecipeGetSerializer, SubscriptionsSerializer)
+from api.serializers import (AvatarSerializer, IngredientSerializer,
+                             RecipeCreateUpdateSerializer, RecipeGetSerializer,
+                             SubscriptionsSerializer, TagSerializer)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
@@ -11,18 +12,19 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
-from recipes.models import (Recipe, RecipeIngredient, UserFavorite,
-                            UserShoppingList)
+from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
+                            UserFavorite, UserShoppingList)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import UserSubscriptions
 
 User = get_user_model()
 
 
-class CustomUserViewSet(DjoserUserViewSet):
+class ExtendedUserViewSet(DjoserUserViewSet):
     """Модифицированный UserViewSet из djoser."""
 
     pagination_class = FoodgramPagination
@@ -58,7 +60,7 @@ class CustomUserViewSet(DjoserUserViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-        ["post", "delete"],
+        ["post"],
         detail=True,
         permission_classes=(IsAuthenticated,)
     )
@@ -69,10 +71,8 @@ class CustomUserViewSet(DjoserUserViewSet):
 
         # Проверка на самоподписку
         if user == subscription_user:
-            return Response(
-                {"detail": "Нельзя подписаться на самого себя."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            if user == subscription_user:
+                raise ValidationError("Нельзя подписаться на самого себя.")
 
         subscription, created = UserSubscriptions.objects.get_or_create(
             user=user, author=subscription_user
@@ -165,20 +165,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
 
-        if request.method == "POST":
-            obj, created = model_class.objects.get_or_create(
-                user=user, recipe=recipe
+        if request.method == "DELETE":
+            list_item = get_object_or_404(
+                model_class, user=user, recipe=recipe
             )
-            if not created:
-                return Response(
-                    {"detail": "Рецепт уже добавлен."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            return Response(status=status.HTTP_201_CREATED)
+            list_item.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-        obj = get_object_or_404(model_class, user=user, recipe=recipe)
-        obj.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        list_item, created = model_class.objects.get_or_create(
+            user=user, recipe=recipe
+        )
+        if not created:
+            raise ValidationError("Рецепт уже добавлен.")
+        return Response(status=status.HTTP_201_CREATED)
 
     @action(["get"], detail=False, permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
@@ -201,3 +200,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
             shopping_cart_content, as_attachment=True,
             filename="shopping_cart.txt"
         )
+
+
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Вьюсет для получения ингредиентов.
+    Поддерживает методы list и retrieve (только чтение).
+    """
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+    permission_classes = [AllowAny]
+    search_fields = ['name']  # Поиск по имени ингредиента
+
+
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Вьюсет для получения тегов.
+    Поддерживает методы list и retrieve (только чтение).
+    """
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [AllowAny]

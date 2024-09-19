@@ -22,6 +22,7 @@ def format_shopping_cart(ingredients, recipes):
         f"Список покупок на {datetime.now().strftime('%Y-%m-%d')}:",
         "Продукты:",
         *ingredients,
-        "\nРецепты:",
+        "",
+        "Рецепты:",
         *recipes
     ])

@@ -10,11 +10,6 @@ from recipes.short_code_generator import generate_short_code
 
 USERNAME_REGEX = r'^[a-zA-Z0-9._]+$'
 
-validate_username = RegexValidator(
-    regex=USERNAME_REGEX,
-    message="Имя пользователя может содержать только буквы, цифры, символы "
-)
-
 
 class FoodgramUser(AbstractUser):
     """Модель пользователя."""
@@ -23,7 +18,11 @@ class FoodgramUser(AbstractUser):
         'Имя пользователя',
         max_length=NAME_MAX_LENGTH,
         unique=True,
-        validators=[validate_username]
+        validators=[RegexValidator(
+            regex=USERNAME_REGEX,
+            message="Имя пользователя может содержать только "
+            "буквы, цифры и символы."
+        )]
     )
     first_name = models.CharField('Имя', max_length=NAME_MAX_LENGTH)
     last_name = models.CharField('Фамилия', max_length=NAME_MAX_LENGTH)
@@ -93,7 +92,7 @@ class Recipe(models.Model):
     cooking_time = models.PositiveIntegerField(
         'Время приготовления',
         validators=[
-            MinValueValidator(1),  # Минимальное время приготовления 1 минута
+            MinValueValidator(MIN_AMOUNT),  # Используем MIN_AMOUNT из констант
             MaxValueValidator(1000)
         ]
     )
@@ -203,7 +202,7 @@ class UserShoppingList(BaseUserRecipeList):
 
 
 class UserSubscriptions(models.Model):
-    """Промежуточная модель для подписок пользователя."""
+    """Модель для подписок пользователя."""
 
     user = models.ForeignKey(
         FoodgramUser,
