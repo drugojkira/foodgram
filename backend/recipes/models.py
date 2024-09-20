@@ -92,7 +92,7 @@ class Recipe(models.Model):
     cooking_time = models.PositiveIntegerField(
         'Время приготовления',
         validators=[
-            MinValueValidator(MIN_AMOUNT),  # Используем MIN_AMOUNT из констант
+            MinValueValidator(MIN_AMOUNT),
             MaxValueValidator(1000)
         ]
     )
@@ -157,6 +157,33 @@ class RecipeIngredient(models.Model):
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
         default_related_name = 'recipeingredients'
+
+
+class RecipeTag(models.Model):
+    """Промежуточная модель тегов и рецептов."""
+
+    recipe = models.ForeignKey(
+        Recipe,
+        verbose_name='Рецепт',
+        on_delete=models.CASCADE,
+        related_name='recipetags'
+    )
+    tag = models.ForeignKey(
+        Tag,
+        verbose_name='Тег',
+        on_delete=models.CASCADE,
+        related_name='recipetags'
+    )
+
+    class Meta:
+        verbose_name = 'Тег рецепта'
+        verbose_name_plural = 'Теги рецептов'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('recipe', 'tag'),
+                name='unique_recipe_tag'
+            )
+        ]
 
 
 class BaseUserRecipeList(models.Model):

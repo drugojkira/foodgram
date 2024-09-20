@@ -3,7 +3,7 @@ from api.pagination import FoodgramPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.recipes_utils import format_shopping_cart
 from api.serializers import (AvatarSerializer, IngredientSerializer,
-                             RecipeCreateUpdateSerializer, RecipeGetSerializer,
+                             RecipeCreateUpdateSerializer, RecipeSerializer,
                              SubscriptionsSerializer, TagSerializer)
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -19,7 +19,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from users.models import UserSubscriptions
+from recipes.models import UserSubscriptions
 
 User = get_user_model()
 
@@ -118,7 +118,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Представление для рецептов."""
 
     queryset = Recipe.objects.all()
-    serializer_class = RecipeGetSerializer
+    serializer_class = RecipeSerializer
     http_method_names = ("get", "post", "patch", "delete")
     pagination_class = FoodgramPagination
     filter_backends = (DjangoFilterBackend,)
@@ -128,7 +128,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in ("create", "partial_update"):
             return RecipeCreateUpdateSerializer
-        return RecipeGetSerializer
+        return RecipeSerializer
 
     @action(["get"], detail=True, url_path="get-link")
     def get_link(self, request, pk=None):

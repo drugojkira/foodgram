@@ -87,6 +87,12 @@ python -m venv venv
 source /venv/bin/activate
 ```
 
+- Перейдите в папку backend:
+
+```bash
+cd backend
+```
+
 - Установить зависимости из файла requirements.txt
 
 ```bash
@@ -104,11 +110,12 @@ POSTGRES_PASSWORD=postgres # пароль для подключения к БД 
 DB_HOST=db # название сервиса (контейнера)
 DB_PORT=5432 # порт для подключения к БД
 DEBUG=0
-DJANGO_ENV=production
+DJANGO_ENV=development
 ```
 
 ### Выполните миграции:
 ```bash
+python manage.py makemigrations
 python manage.py migrate
 ```
 
