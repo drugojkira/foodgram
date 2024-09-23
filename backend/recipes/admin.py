@@ -5,11 +5,10 @@ from django.utils.safestring import mark_safe
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
                             UserFavorite)
 
-User = get_user_model()
+from .constants import (FAST_COOKING_TIME, LONG_COOKING_TIME,
+                        MEDIUM_COOKING_TIME, TIME_FAST, TIME_MEDIUM)
 
-FAST_COOKING_TIME = (0, 30)
-MEDIUM_COOKING_TIME = (30, 60)
-LONG_COOKING_TIME = (60, 10000)
+User = get_user_model()
 
 
 class CookingTimeFilter(admin.SimpleListFilter):
@@ -19,9 +18,9 @@ class CookingTimeFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [
-            (FAST_COOKING_TIME, "Быстрее 30 мин"),
-            (MEDIUM_COOKING_TIME, "Быстрее 60 мин"),
-            (LONG_COOKING_TIME, "Дольше 60 мин"),
+            (FAST_COOKING_TIME, f"Быстрее {TIME_FAST} мин"),
+            (MEDIUM_COOKING_TIME, f"Быстрее {TIME_MEDIUM} мин"),
+            (LONG_COOKING_TIME, f"Дольше {TIME_MEDIUM} мин"),
         ]
 
     def queryset(self, request, queryset):
@@ -46,7 +45,7 @@ class HasRecipesFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         has_recipes = self.value() == 'yes'
         return queryset.filter(
-            author_recipes__isnull=not has_recipes
+            recipes__isnull=not has_recipes
         ).distinct()
 
 
@@ -115,7 +114,7 @@ class RecipeIngredientInline(admin.TabularInline):
 
 class RecipeTagInline(admin.TabularInline):
     """Отображение тегов рецепта."""
-    model = Recipe.tags.through  # Используем связь ManyToMany через `through`
+    model = Recipe.tags.through
     extra = 1
 
 

@@ -6,7 +6,7 @@
 
 Реализован процесс CI/CD с помощью GitHub Actions (активация происходит при push в ветку releases). При успешном деплое на сервер происходит отправка сообщения в Telegram.
 
-[Проект с тестовыми данными доступен по адресу](https://51.250.30.138/recipes)
+[Проект с тестовыми данными доступен по адресу](http://51.250.30.138/recipes)
 
 
 # Авторы проекта
@@ -115,7 +115,6 @@ DJANGO_ENV=development
 
 ### Выполните миграции:
 ```bash
-python manage.py makemigrations
 python manage.py migrate
 ```
 
@@ -126,8 +125,11 @@ python manage.py createsuperuser
 
 ### Заполните базу тестовыми данными: 
 ```bash
-python manage.py loaddata data/ingredients.json
-python manage.py loaddata data/tags.json
+Выполнить команду import_data в контейнере backend:
+
+```
+python manage.py import_data
+```
 
 ```
 
@@ -135,3 +137,13 @@ python manage.py loaddata data/tags.json
 ```bash
 python manage.py runserver
 ```
+
+### Технологии
+
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)
+![Gunicorn](https://img.shields.io/badge/gunicorn-%298729.svg?style=for-the-badge&logo=gunicorn&logoColor=white)
+![Django](https://img.shields.io/badge/django-%23092E20.svg?style=for-the-badge&logo=django&logoColor=white)
+![DjangoREST](https://img.shields.io/badge/DJANGO-REST-ff1709?style=for-the-badge&logo=django&logoColor=white&color=ff1709&labelColor=gray)
+![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)

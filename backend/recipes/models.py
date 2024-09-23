@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (MaxValueValidator, MinValueValidator,
-                                    RegexValidator)
+from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import F, Q
 from recipes.constants import (MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT,
@@ -21,7 +20,7 @@ class FoodgramUser(AbstractUser):
         validators=[RegexValidator(
             regex=USERNAME_REGEX,
             message="Имя пользователя может содержать только "
-            "буквы, цифры и символы."
+                    "буквы, цифры и символы."
         )]
     )
     first_name = models.CharField('Имя', max_length=NAME_MAX_LENGTH)
@@ -92,8 +91,7 @@ class Recipe(models.Model):
     cooking_time = models.PositiveIntegerField(
         'Время приготовления',
         validators=[
-            MinValueValidator(MIN_AMOUNT),
-            MaxValueValidator(1000)
+            MinValueValidator(1)
         ]
     )
     created_at = models.DateTimeField('Время добавления', auto_now_add=True)
@@ -115,7 +113,6 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(
         Tag,
-        through='RecipeTag',
         verbose_name='Теги',
         related_name='recipes'
     )
@@ -140,16 +137,14 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='Рецепт',
-        on_delete=models.CASCADE,
-        related_name='recipeingredients'
+        on_delete=models.CASCADE
     )
     ingredient = models.ForeignKey(
         Ingredient, verbose_name='Ингредиент', on_delete=models.CASCADE
     )
     amount = models.PositiveIntegerField(
         'Количество', validators=[
-            MinValueValidator(MIN_AMOUNT),
-            MaxValueValidator(1000)
+            MinValueValidator(MIN_AMOUNT)
         ]
     )
 
@@ -157,33 +152,6 @@ class RecipeIngredient(models.Model):
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
         default_related_name = 'recipeingredients'
-
-
-class RecipeTag(models.Model):
-    """Промежуточная модель тегов и рецептов."""
-
-    recipe = models.ForeignKey(
-        Recipe,
-        verbose_name='Рецепт',
-        on_delete=models.CASCADE,
-        related_name='recipetags'
-    )
-    tag = models.ForeignKey(
-        Tag,
-        verbose_name='Тег',
-        on_delete=models.CASCADE,
-        related_name='recipetags'
-    )
-
-    class Meta:
-        verbose_name = 'Тег рецепта'
-        verbose_name_plural = 'Теги рецептов'
-        constraints = [
-            models.UniqueConstraint(
-                fields=('recipe', 'tag'),
-                name='unique_recipe_tag'
-            )
-        ]
 
 
 class BaseUserRecipeList(models.Model):

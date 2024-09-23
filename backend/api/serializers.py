@@ -176,13 +176,21 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     def validate_ingredient_amounts(ingredients):
         """Проверка на корректные значения количества ингредиентов."""
         invalid_ingredients = [
-            ingredient['id'] for ingredient in ingredients
+            (
+                ingredient['id'], ingredient['amount']
+            ) for ingredient in ingredients
             if ingredient['amount'] < MIN_AMOUNT
         ]
         if invalid_ingredients:
+            invalid_details = ", ".join(
+                [
+                    f"ID: {ingredient_id}, Amount: {amount}"
+                    for ingredient_id, amount in invalid_ingredients
+                ]
+            )
             raise ValidationError(
-                f"Количество для следующих ингредиентов {invalid_ingredients} "
-                f"должно быть больше или равно {MIN_AMOUNT}."
+                f"Количество следующих ингредиентов должно быть больше или "
+                f"равно {MIN_AMOUNT}: {invalid_details}."
             )
         return ingredients
 

@@ -70,8 +70,7 @@ class ExtendedUserViewSet(DjoserUserViewSet):
 
         # Проверка на самоподписку
         if user == subscription_user:
-            if user == subscription_user:
-                raise ValidationError("Нельзя подписаться на самого себя.")
+            raise ValidationError("Нельзя подписаться на самого себя.")
 
         subscription, created = UserSubscriptions.objects.get_or_create(
             user=user, author=subscription_user
@@ -171,7 +170,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             list_item.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        list_item, created = model_class.objects.get_or_create(
+        _, created = model_class.objects.get_or_create(
             user=user, recipe=recipe
         )
         if not created:
