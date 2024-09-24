@@ -233,7 +233,7 @@ class SubscriptionsSerializer(DjoserUserSerializer):
 
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(
-        source="recipes.count", read_only=True
+        source="author_recipes.count", read_only=True
     )
     is_subscribed = serializers.SerializerMethodField()
 
@@ -255,7 +255,7 @@ class SubscriptionsSerializer(DjoserUserSerializer):
         except (TypeError, ValueError):
             recipes_limit = None
 
-        recipes = user.recipes.all()
+        recipes = user.author_recipes.all()
         if recipes_limit:
             recipes = recipes[:recipes_limit]
 
