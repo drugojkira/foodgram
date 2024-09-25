@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, RegexValidator
+from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
 from recipes.constants import (MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT,
@@ -27,6 +28,7 @@ class FoodgramUser(AbstractUser):
     last_name = models.CharField('Фамилия', max_length=NAME_MAX_LENGTH)
     email = models.EmailField('Электронная почта', unique=True)
     avatar = models.ImageField('Аватар', upload_to='users', blank=True)
+    subscriptions = models.ManyToManyField('self', symmetrical=False, related_name='subscribers', blank=True)
 
     REQUIRED_FIELDS = ('first_name', 'last_name', 'username')
     USERNAME_FIELD = 'email'
@@ -34,7 +36,7 @@ class FoodgramUser(AbstractUser):
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'пользователи'
-        ordering = ('username',)
+        ordering = ('username', )
 
 
 class Ingredient(models.Model):
@@ -115,6 +117,12 @@ class Recipe(models.Model):
         Tag,
         verbose_name='Теги',
         related_name='recipes'
+    )
+
+    user_favorites = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='favorite_recipes',
+        blank=True
     )
 
     class Meta:

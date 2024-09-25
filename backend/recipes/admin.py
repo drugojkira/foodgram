@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserFavorite)
+                            UserFavorite, FoodgramUser)
 
 from .constants import (FAST_COOKING_TIME, LONG_COOKING_TIME,
                         MEDIUM_COOKING_TIME, TIME_FAST, TIME_MEDIUM)
@@ -81,7 +81,7 @@ class HasSubscribersFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         has_subscribers = self.value() == 'yes'
         return queryset.filter(
-            subscribed_to__isnull=not has_subscribers
+            subscriptions__isnull=not has_subscribers
         ).distinct()
 
 
@@ -132,6 +132,8 @@ class RecipeAdmin(admin.ModelAdmin):
         "short_url_code",
         "count_favorites",
         "display_image",
+        "display_tags",
+        "display_ingredients",
     )
     inlines = (RecipeIngredientInline, RecipeTagInline)
     search_fields = (
@@ -151,8 +153,7 @@ class RecipeAdmin(admin.ModelAdmin):
         "author",
         "cooking_time",
         "count_favorites",
-        "display_tags",
-        "display_ingredients",
+        "display_image",
     )
 
     @admin.display(description='Изображение')
@@ -227,7 +228,7 @@ class FoodgramUserAdmin(UserAdmin):
         return user.authors.count()
 
 
-admin.site.register(User, FoodgramUserAdmin)
+admin.site.register(FoodgramUser, FoodgramUserAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Tag, TagAdmin)
