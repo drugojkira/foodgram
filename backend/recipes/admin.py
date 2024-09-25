@@ -2,8 +2,8 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
-from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserFavorite, FoodgramUser)
+from recipes.models import (FoodgramUser, Ingredient, Recipe, RecipeIngredient,
+                            Tag, UserFavorite)
 
 from .constants import (FAST_COOKING_TIME, LONG_COOKING_TIME,
                         MEDIUM_COOKING_TIME, TIME_FAST, TIME_MEDIUM)
