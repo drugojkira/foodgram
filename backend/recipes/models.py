@@ -137,7 +137,9 @@ class Recipe(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.short_url_code:
-            self.short_url_code = generate_short_code()
+            self.short_url_code = generate_short_code(
+                self.__class__, 'short_url_code'
+            )
         return super().save(*args, **kwargs)
 
 
