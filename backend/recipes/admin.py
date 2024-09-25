@@ -125,13 +125,13 @@ class RecipeAdmin(admin.ModelAdmin):
         "author",
         "created_at",
         "count_favorites",
-        "display_image"
+        "display_image",
     )
     readonly_fields = (
         "created_at",
         "short_url_code",
         "count_favorites",
-        "display_image"
+        "display_image",
     )
     inlines = (RecipeIngredientInline, RecipeTagInline)
     search_fields = (
@@ -195,7 +195,7 @@ class FoodgramUserAdmin(UserAdmin):
         "avatar_image",
         "recipe_count",
         "subscription_count",
-        "subscriber_count"
+        "subscriber_count",
     )
     list_filter = (
         HasRecipesFilter, HasSubscriptionsFilter, HasSubscribersFilter

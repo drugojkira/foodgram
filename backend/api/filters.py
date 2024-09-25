@@ -44,5 +44,5 @@ class RecipeFilter(filters.FilterSet):
             "author",
             "tags",
             "is_favorited",
-            "is_in_shopping_cart"
+            "is_in_shopping_cart",
         )

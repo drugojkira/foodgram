@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from djoser.serializers import UserSerializer as DjoserUserSerializer
+from djoser.serializers import UserCreateSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.constants import MIN_AMOUNT
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
@@ -34,7 +34,7 @@ class UserSerializer(DjoserUserSerializer):
         if not request or not request.user.is_authenticated:
             return False
         return UserSubscriptions.objects.filter(
-            user=request.user, subscription=user
+            user=request.user, author=user
         ).exists()
 
 
@@ -143,7 +143,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             "image",
             "name",
             "text",
-            "cooking_time"
+            "cooking_time",
         )
 
     @staticmethod
@@ -264,4 +264,4 @@ class SubscriptionsSerializer(DjoserUserSerializer):
                 "id",
                 "name",
                 "image",
-                "cooking_time")).data
+                "cooking_time",)).data
