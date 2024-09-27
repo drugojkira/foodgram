@@ -182,12 +182,10 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             if ingredient['amount'] < MIN_AMOUNT
         ]
         if invalid_ingredients:
-            invalid_details = ", ".join(
-                [
-                    f"ID: {ingredient_id}, Amount: {amount}"
-                    for ingredient_id, amount in invalid_ingredients
-                ]
-            )
+            invalid_details = [
+                f"ID: {ingredient_id}, Amount: {amount}"
+                for ingredient_id, amount in invalid_ingredients
+            ]
             raise ValidationError(
                 f"Количество следующих ингредиентов должно быть больше или "
                 f"равно {MIN_AMOUNT}: {invalid_details}."

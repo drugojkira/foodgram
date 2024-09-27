@@ -1,11 +1,10 @@
-from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import F, Q
 from recipes.constants import (MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT,
-                               NAME_MAX_LENGTH, SHORT_URL_CODE_MAX_LENGTH,
-                               TAG_NAME_MAX_LENGTH)
+                               MIN_COOKING_TIME, NAME_MAX_LENGTH,
+                               SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGTH)
 from recipes.short_code_generator import generate_short_code
 
 USERNAME_REGEX = r'^[a-zA-Z0-9._]+$'
@@ -28,9 +27,6 @@ class FoodgramUser(AbstractUser):
     last_name = models.CharField('Фамилия', max_length=NAME_MAX_LENGTH)
     email = models.EmailField('Электронная почта', unique=True)
     avatar = models.ImageField('Аватар', upload_to='users', blank=True)
-    subscriptions = models.ManyToManyField(
-        'self', symmetrical=False, related_name='subscribers', blank=True
-    )
 
     REQUIRED_FIELDS = ('first_name', 'last_name', 'username')
     USERNAME_FIELD = 'email'
@@ -95,7 +91,7 @@ class Recipe(models.Model):
     cooking_time = models.PositiveIntegerField(
         'Время приготовления',
         validators=[
-            MinValueValidator(1)
+            MinValueValidator(MIN_COOKING_TIME)
         ]
     )
     created_at = models.DateTimeField('Время добавления', auto_now_add=True)
@@ -119,12 +115,6 @@ class Recipe(models.Model):
         Tag,
         verbose_name='Теги',
         related_name='recipes'
-    )
-
-    user_favorites = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name='favorite_recipes',
-        blank=True
     )
 
     class Meta:

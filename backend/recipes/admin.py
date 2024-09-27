@@ -5,10 +5,13 @@ from django.utils.safestring import mark_safe
 from recipes.models import (FoodgramUser, Ingredient, Recipe, RecipeIngredient,
                             Tag, UserFavorite)
 
-from .constants import (FAST_COOKING_TIME, LONG_COOKING_TIME,
-                        MEDIUM_COOKING_TIME, TIME_FAST, TIME_MEDIUM)
+from .constants import TIME_FAST, TIME_MAX, TIME_MEDIUM
 
 User = get_user_model()
+
+FAST_COOKING_TIME = (0, TIME_FAST)
+MEDIUM_COOKING_TIME = (TIME_FAST, TIME_MEDIUM)
+LONG_COOKING_TIME = (TIME_MEDIUM, TIME_MAX)
 
 
 class CookingTimeFilter(admin.SimpleListFilter):
@@ -63,7 +66,7 @@ class HasSubscriptionsFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         has_subscriptions = self.value() == 'yes'
         return queryset.filter(
-            subscriptions__isnull=not has_subscriptions
+            followers__isnull=not has_subscriptions
         ).distinct()
 
 
@@ -81,7 +84,7 @@ class HasSubscribersFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         has_subscribers = self.value() == 'yes'
         return queryset.filter(
-            subscriptions__isnull=not has_subscribers
+            authors__isnull=not has_subscribers
         ).distinct()
 
 
@@ -126,6 +129,8 @@ class RecipeAdmin(admin.ModelAdmin):
         "created_at",
         "count_favorites",
         "display_image",
+        "display_tags",
+        "display_ingredients",
     )
     readonly_fields = (
         "created_at",
@@ -183,7 +188,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(description="Избранные")
     def count_favorites(self, recipe):
-        return recipe.user_favorites.count()
+        return UserFavorite.objects.filter(recipe=recipe).count()
 
 
 class FoodgramUserAdmin(UserAdmin):
