@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 from recipes.models import (FoodgramUser, Ingredient, Recipe, RecipeIngredient,
-                            Tag, UserFavorite)
+                            Tag, UserFavorite, UserShoppingList)
 
 from .constants import TIME_FAST, TIME_MAX, TIME_MEDIUM
 
@@ -126,14 +126,13 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "author",
-        "created_at",
+        "cooking_time",
         "count_favorites",
         "display_image",
         "display_tags",
         "display_ingredients",
     )
     readonly_fields = (
-        "created_at",
         "short_url_code",
         "count_favorites",
         "display_image",
@@ -153,7 +152,6 @@ class RecipeAdmin(admin.ModelAdmin):
     fields = (
         "name",
         "image",
-        "created_at",
         "short_url_code",
         "author",
         "cooking_time",
@@ -233,9 +231,11 @@ class FoodgramUserAdmin(UserAdmin):
         return user.authors.count()
 
 
+# Регистрация моделей
 admin.site.register(FoodgramUser, FoodgramUserAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(UserFavorite)
+admin.site.register(UserShoppingList)
 admin.site.register(RecipeIngredient)
