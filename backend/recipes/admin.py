@@ -2,8 +2,8 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
-from recipes.models import (FoodgramUser, Ingredient, Recipe, RecipeIngredient,
-                            Tag, UserFavorite, UserShoppingList)
+from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
+                            UserFavorite, UserShoppingList)
 
 from .constants import TIME_FAST, TIME_MAX, TIME_MEDIUM
 
@@ -47,9 +47,7 @@ class HasRecipesFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         has_recipes = self.value() == 'yes'
-        return queryset.filter(
-            recipes__isnull=not has_recipes
-        ).distinct()
+        return queryset.filter(recipes__isnull=not has_recipes).distinct()
 
 
 class HasSubscriptionsFilter(admin.SimpleListFilter):
@@ -84,7 +82,7 @@ class HasSubscribersFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         has_subscriptions = self.value() == 'yes'
         return queryset.filter(
-            authors__isnull=not has_subscriptions
+            subscribers__isnull=not has_subscriptions
         ).distinct()
 
 
@@ -229,7 +227,7 @@ class FoodgramUserAdmin(UserAdmin):
     @admin.display(description="Подписчики")
     def subscriber_count(self, user):
         """Количество подписчиков пользователя."""
-        return user.subscriptions.count()
+        return user.subscribers.count()
 
 
 class UserFavoriteAdmin(admin.ModelAdmin):
@@ -245,7 +243,7 @@ class UserShoppingListAdmin(admin.ModelAdmin):
 
 
 # Регистрация моделей
-admin.site.register(FoodgramUser, FoodgramUserAdmin)
+admin.site.register(User, FoodgramUserAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Tag, TagAdmin)

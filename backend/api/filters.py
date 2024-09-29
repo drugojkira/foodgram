@@ -14,7 +14,7 @@ class IngredientSearchFilter(SearchFilter):
 class RecipeFilter(filters.FilterSet):
     """Фильтр для рецептов."""
 
-    author = CharFilter(field_name="author")
+    author = CharFilter(field_name="author__username")
     tags = ModelMultipleChoiceFilter(
         field_name="tags__slug",
         queryset=Tag.objects.all(),

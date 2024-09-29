@@ -34,15 +34,15 @@ class FoodgramUser(AbstractUser):
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'пользователи'
-        ordering = ('username', )
+        ordering = ('username',)
 
     @property
     def favorites_count(self):
-        return self.userfavorites.count()
+        return self.favorites.count()
 
     @property
     def shopping_list_count(self):
-        return self.usershoppinglists.count()
+        return self.shopping_lists.count()
 
 
 class Ingredient(models.Model):
@@ -57,7 +57,6 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        default_related_name = 'ingredients'
         ordering = ('name',)
         constraints = [
             models.UniqueConstraint(
@@ -83,7 +82,6 @@ class Tag(models.Model):
     class Meta:
         verbose_name = 'тег'
         verbose_name_plural = 'Теги'
-        default_related_name = 'tags'
         ordering = ('name',)
 
     def __str__(self):
@@ -98,9 +96,7 @@ class Recipe(models.Model):
     text = models.TextField('Описание')
     cooking_time = models.PositiveIntegerField(
         'Время приготовления',
-        validators=[
-            MinValueValidator(MIN_COOKING_TIME)
-        ]
+        validators=[MinValueValidator(MIN_COOKING_TIME)]
     )
     created_at = models.DateTimeField('Время добавления', auto_now_add=True)
     short_url_code = models.CharField(
@@ -155,15 +151,12 @@ class RecipeIngredient(models.Model):
         Ingredient, verbose_name='Ингредиент', on_delete=models.CASCADE
     )
     amount = models.PositiveIntegerField(
-        'Количество', validators=[
-            MinValueValidator(MIN_AMOUNT)
-        ]
+        'Количество', validators=[MinValueValidator(MIN_AMOUNT)]
     )
 
     class Meta:
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
-        default_related_name = 'recipeingredients'
 
 
 class BaseUserRecipeList(models.Model):
@@ -195,6 +188,13 @@ class BaseUserRecipeList(models.Model):
 class UserFavorite(BaseUserRecipeList):
     """Модель для списка избранного пользователя."""
 
+    user = models.ForeignKey(
+        FoodgramUser, on_delete=models.CASCADE, related_name='favorites'
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name='favorited_by'
+    )
+
     class Meta(BaseUserRecipeList.Meta):
         verbose_name = 'избранное'
         verbose_name_plural = 'Избранные'
@@ -202,6 +202,13 @@ class UserFavorite(BaseUserRecipeList):
 
 class UserShoppingList(BaseUserRecipeList):
     """Модель для списка покупок пользователя."""
+
+    user = models.ForeignKey(
+        FoodgramUser, on_delete=models.CASCADE, related_name='shopping_lists'
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name='in_shopping_lists'
+    )
 
     class Meta(BaseUserRecipeList.Meta):
         verbose_name = 'список покупок'
@@ -220,7 +227,7 @@ class UserSubscriptions(models.Model):
     author = models.ForeignKey(
         FoodgramUser,
         verbose_name='Автор',
-        related_name='authors',
+        related_name='subscribers',
         on_delete=models.CASCADE
     )
 

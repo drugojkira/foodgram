@@ -10,7 +10,7 @@ from rest_framework import permissions
 schema_view = get_schema_view(
     openapi.Info(
         title="Foodgram API",
-        default_version='v1',
+        default_version="v1",
         description="Описание API Foodgram",
         terms_of_service="https://www.google.com/policies/terms/",
         contact=openapi.Contact(email="contact@foodgram.local"),
@@ -24,12 +24,17 @@ urlpatterns = [
     path("api/", include("api.urls")),
     path("admin/", admin.site.urls),
     path("", include("recipes.urls")),
+
     # URL для Swagger-документации
-    path("api/docs/", schema_view.with_ui(
-        "swagger", cache_timeout=0), name="schema-swagger-ui"
+    path(
+        "api/docs/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui"
     ),
     # Альтернативный вариант документации (если используете ReDoc)
-    path("api/redoc/", schema_view.with_ui(
-        "redoc", cache_timeout=0), name="schema-redoc"
+    path(
+        "api/redoc/",
+        schema_view.with_ui("redoc", cache_timeout=0),
+        name="schema-redoc"
     ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

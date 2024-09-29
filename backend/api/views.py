@@ -8,7 +8,7 @@ from api.serializers import (AvatarSerializer, IngredientSerializer,
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django.http import FileResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
@@ -104,7 +104,7 @@ class ExtendedUserViewSet(DjoserUserViewSet):
     @action(["get"], permission_classes=(IsAuthenticated,), detail=False)
     def subscriptions(self, request):
         """Получаем список подписок текущего пользователя."""
-        user = request.user
+        user = self.request.user
         subscriptions = UserSubscriptions.objects.filter(user=user)
         page = self.paginate_queryset(subscriptions)
         serializer = SubscriptionsSerializer(
@@ -136,10 +136,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         short_url = request.build_absolute_uri(
             f"/{settings.SHORT_LINK_URL_PATH}/{short_url_code}/"
         )
-        return Response(
-            {"short-link": short_url},
-            status=status.HTTP_200_OK,
-        )
+        return Response({"short-link": short_url}, status=status.HTTP_200_OK)
 
     @action(
         ["post", "delete"],
@@ -195,17 +192,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
         # Формируем текст для файла со списком покупок
         shopping_cart_content = format_shopping_cart(ingredients, recipes)
 
-        return FileResponse(
-            shopping_cart_content, as_attachment=True,
-            filename="shopping_cart.txt"
+        # Возвращаем файл как текстовый ответ
+        response = HttpResponse(
+            shopping_cart_content, content_type="text/plain"
         )
+        response[
+            "Content-Disposition"
+        ] = 'attachment; filename="shopping_cart.txt"'
+        return response
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Вьюсет для получения ингредиентов.
-    Поддерживает методы list и retrieve (только чтение).
-    """
+    """Вьюсет для получения ингредиентов (только чтение)."""
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
@@ -214,10 +213,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Вьюсет для получения тегов.
-    Поддерживает методы list и retrieve (только чтение).
-    """
+    """Вьюсет для получения тегов (только чтение)."""
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [AllowAny]

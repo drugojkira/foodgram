@@ -5,7 +5,7 @@ from djoser.serializers import UserCreateSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.constants import MIN_AMOUNT
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserFavorite, UserShoppingList, UserSubscriptions)
+                            UserSubscriptions)
 from rest_framework import serializers
 
 User = get_user_model()
@@ -100,8 +100,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
-        return UserFavorite.objects.filter(
-            user=request.user, recipe=recipe
+        return recipe.favorited_by.filter(
+            id=request.user.id
         ).exists()
 
     def get_is_in_shopping_cart(self, recipe):
@@ -109,8 +109,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
-        return UserShoppingList.objects.filter(
-            user=request.user, recipe=recipe
+        return recipe.in_shopping_lists.filter(
+            id=request.user.id
         ).exists()
 
 
@@ -277,7 +277,7 @@ class SubscriptionsSerializer(DjoserUserSerializer):
         except (TypeError, ValueError):
             recipes_limit = None
 
-        recipes = user.author_recipes.all()
+        recipes = user.recipes.all()
         if recipes_limit:
             recipes = recipes[:recipes_limit]
 
