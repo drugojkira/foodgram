@@ -11,13 +11,13 @@ from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter
 from djoser.views import UserViewSet as DjoserUserViewSet
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
                             UserFavorite, UserShoppingList, UserSubscriptions)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
