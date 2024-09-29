@@ -104,8 +104,8 @@ class ExtendedUserViewSet(DjoserUserViewSet):
     @action(["get"], permission_classes=(IsAuthenticated,), detail=False)
     def subscriptions(self, request):
         """Получаем список подписок текущего пользователя."""
-        user = self.request.user
-        subscriptions = user.subscriptions.all()
+        user = request.user
+        subscriptions = UserSubscriptions.objects.filter(user=user)
         page = self.paginate_queryset(subscriptions)
         serializer = SubscriptionsSerializer(
             page, many=True, context={"request": request}

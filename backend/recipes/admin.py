@@ -66,7 +66,7 @@ class HasSubscriptionsFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         has_subscriptions = self.value() == 'yes'
         return queryset.filter(
-            followers__isnull=not has_subscriptions
+            subscriptions__isnull=not has_subscriptions
         ).distinct()
 
 
@@ -82,9 +82,9 @@ class HasSubscribersFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
-        has_subscribers = self.value() == 'yes'
+        has_subscriptions = self.value() == 'yes'
         return queryset.filter(
-            authors__isnull=not has_subscribers
+            authors__isnull=not has_subscriptions
         ).distinct()
 
 
@@ -224,12 +224,12 @@ class FoodgramUserAdmin(UserAdmin):
     @admin.display(description="Подписки")
     def subscription_count(self, user):
         """Количество подписок пользователя."""
-        return user.followers.count()
+        return user.subscriptions.count()
 
     @admin.display(description="Подписчики")
     def subscriber_count(self, user):
         """Количество подписчиков пользователя."""
-        return user.authors.count()
+        return user.subscriptions.count()
 
 
 class UserFavoriteAdmin(admin.ModelAdmin):
