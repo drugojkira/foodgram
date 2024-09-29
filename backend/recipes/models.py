@@ -36,6 +36,14 @@ class FoodgramUser(AbstractUser):
         verbose_name_plural = 'пользователи'
         ordering = ('username', )
 
+    @property
+    def favorites_count(self):
+        return self.userfavorites.count()
+
+    @property
+    def shopping_list_count(self):
+        return self.usershoppinglists.count()
+
 
 class Ingredient(models.Model):
     """Модель ингредиентов."""
@@ -97,7 +105,8 @@ class Recipe(models.Model):
     created_at = models.DateTimeField('Время добавления', auto_now_add=True)
     short_url_code = models.CharField(
         'Код короткой ссылки',
-        max_length=SHORT_URL_CODE_MAX_LENGTH
+        max_length=SHORT_URL_CODE_MAX_LENGTH,
+        unique=True
     )
     author = models.ForeignKey(
         FoodgramUser,

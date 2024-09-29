@@ -20,7 +20,6 @@ class UserSerializer(DjoserUserSerializer):
 
     class Meta:
         model = User
-        # Используем поля базового класса, добавляем is_subscribed и avatar
         fields = DjoserUserSerializer.Meta.fields + (
             "is_subscribed",
             "avatar",
@@ -128,6 +127,7 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания и обновления рецептов."""
 
+    image = Base64ImageField()
     ingredients = RecipeIngredientCreateSerializer(
         many=True, source="recipeingredient"
     )
@@ -145,6 +145,20 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             "text",
             "cooking_time",
         )
+
+    def validate_image(self, value):
+        """Проверка загружаемого изображения."""
+        if not value:
+            raise ValidationError("Необходимо загрузить изображение.")
+        if not value.name.lower().endswith(('.jpg', '.jpeg', '.png')):
+            raise ValidationError(
+                "Файл должен быть изображением формата JPEG или PNG."
+            )
+        if value.size > 5 * 1024 * 1024:
+            raise ValidationError(
+                "Размер изображения не должен превышать 5 MB."
+            )
+        return value
 
     @staticmethod
     def validate_ingredients(ingredients):
@@ -196,9 +210,12 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients = validated_data.pop("recipeingredient")
         tags = validated_data.pop("tags")
+        image = validated_data.pop("image", None)
         self.validate_ingredient_amounts(ingredients)
+
+        # Создание рецепта с изображением
         recipe = Recipe.objects.create(
-            **validated_data, author=self.context["request"].user
+            **validated_data, author=self.context["request"].user, image=image
         )
         recipe.tags.set(tags)
         self.add_ingredients_to_recipe(recipe, ingredients)
@@ -208,11 +225,18 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         ingredients = validated_data.pop("recipeingredient")
         tags = validated_data.pop("tags")
+        image = validated_data.pop("image", None)
         self.validate_ingredient_amounts(ingredients)
+
         instance.tags.clear()
         instance.tags.set(tags)
         RecipeIngredient.objects.filter(recipe=instance).delete()
         self.add_ingredients_to_recipe(instance, ingredients)
+
+        # Обновление изображения
+        if image:
+            instance.image = image
+
         return super().update(instance, validated_data)
 
     @staticmethod

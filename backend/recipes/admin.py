@@ -158,6 +158,7 @@ class RecipeAdmin(admin.ModelAdmin):
         "count_favorites",
         "display_image",
     )
+    autocomplete_fields = ['ingredients']
 
     @admin.display(description='Изображение')
     def display_image(self, recipe):
@@ -231,11 +232,23 @@ class FoodgramUserAdmin(UserAdmin):
         return user.authors.count()
 
 
+class UserFavoriteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'recipe')
+    search_fields = ('user__username', 'recipe__name')
+    list_filter = ('user', 'recipe')
+
+
+class UserShoppingListAdmin(admin.ModelAdmin):
+    list_display = ('user', 'recipe')
+    search_fields = ('user__username', 'recipe__name')
+    list_filter = ('user', 'recipe')
+
+
 # Регистрация моделей
 admin.site.register(FoodgramUser, FoodgramUserAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Tag, TagAdmin)
-admin.site.register(UserFavorite)
-admin.site.register(UserShoppingList)
+admin.site.register(UserFavorite, UserFavoriteAdmin)
+admin.site.register(UserShoppingList, UserShoppingListAdmin)
 admin.site.register(RecipeIngredient)

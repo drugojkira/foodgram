@@ -11,6 +11,7 @@ from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
 from djoser.views import UserViewSet as DjoserUserViewSet
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
                             UserFavorite, UserShoppingList, UserSubscriptions)
@@ -208,7 +209,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
-    search_fields = ['name']  # Поиск по имени ингредиента
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ['name']
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
