@@ -5,7 +5,7 @@ from djoser.serializers import UserCreateSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.constants import MIN_AMOUNT
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserSubscriptions)
+                            UserShoppingList, UserSubscriptions)
 from rest_framework import serializers
 
 User = get_user_model()
@@ -112,6 +112,22 @@ class RecipeSerializer(serializers.ModelSerializer):
         return recipe.in_shopping_lists.filter(
             id=request.user.id
         ).exists()
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    """Сериализатор для рецептов в корзине покупок."""
+
+    class Meta:
+        model = UserShoppingList
+        fields = ("user", "recipe")
+
+    def validate(self, data):
+        """Проверка перед добавлением рецепта в корзину."""
+        user = data['user']
+        recipe = data['recipe']
+        if UserShoppingList.objects.filter(user=user, recipe=recipe).exists():
+            raise ValidationError("Этот рецепт уже в списке покупок.")
+        return data
 
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
@@ -255,7 +271,7 @@ class SubscriptionsSerializer(DjoserUserSerializer):
 
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(
-        source="author_recipes.count", read_only=True
+        source="recipes.count", read_only=True
     )
     is_subscribed = serializers.SerializerMethodField()
 
@@ -287,3 +303,12 @@ class SubscriptionsSerializer(DjoserUserSerializer):
                 "name",
                 "image",
                 "cooking_time",)).data
+
+    def get_is_subscribed(self, user):
+        """Проверяем, подписан ли текущий пользователь на пользователя."""
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return UserSubscriptions.objects.filter(
+            user=request.user, author=user
+        ).exists()

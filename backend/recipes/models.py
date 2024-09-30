@@ -204,10 +204,12 @@ class UserShoppingList(BaseUserRecipeList):
     """Модель для списка покупок пользователя."""
 
     user = models.ForeignKey(
-        FoodgramUser, on_delete=models.CASCADE, related_name='shopping_lists'
+        FoodgramUser, on_delete=models.CASCADE, related_name='shopping_lists',
+        verbose_name='Пользователь'
     )
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, related_name='in_shopping_lists'
+        Recipe, on_delete=models.CASCADE, related_name='in_shopping_lists',
+        verbose_name='Рецепт'
     )
 
     class Meta(BaseUserRecipeList.Meta):

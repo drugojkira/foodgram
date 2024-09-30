@@ -4,7 +4,8 @@ from api.permissions import IsAuthorOrReadOnly
 from api.recipes_utils import format_shopping_cart
 from api.serializers import (AvatarSerializer, IngredientSerializer,
                              RecipeCreateUpdateSerializer, RecipeSerializer,
-                             SubscriptionsSerializer, TagSerializer)
+                             ShoppingCartSerializer, SubscriptionsSerializer,
+                             TagSerializer)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
@@ -104,7 +105,7 @@ class ExtendedUserViewSet(DjoserUserViewSet):
     @action(["get"], permission_classes=(IsAuthenticated,), detail=False)
     def subscriptions(self, request):
         """Получаем список подписок текущего пользователя."""
-        user = self.request.user
+        user = request.user
         subscriptions = UserSubscriptions.objects.filter(user=user)
         page = self.paginate_queryset(subscriptions)
         serializer = SubscriptionsSerializer(
@@ -141,7 +142,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         ["post", "delete"],
         detail=True,
-        permission_classes=(IsAuthenticated,)
+        permission_classes=(IsAuthenticated,),
+        serializer_class=ShoppingCartSerializer
     )
     def favorite(self, request, pk=None):
         """Обработка добавления и удаления рецептов из избранного."""
@@ -150,7 +152,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         ["post", "delete"],
         detail=True,
-        permission_classes=(IsAuthenticated,)
+        permission_classes=(IsAuthenticated,),
+        serializer_class=ShoppingCartSerializer
     )
     def shopping_cart(self, request, pk=None):
         """Обработка добавления и удаления рецептов из списка покупок."""
@@ -173,7 +176,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         if not created:
             raise ValidationError("Рецепт уже добавлен.")
-        return Response(status=status.HTTP_201_CREATED)
+
+        # Возвращаем сериализованные данные нового объекта
+        serializer = self.get_serializer(instance=recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(["get"], detail=False, permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
@@ -186,6 +192,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).values(
             "ingredient__name", "ingredient__measurement_unit"
         ).annotate(amount=Sum("amount")).order_by("ingredient__name")
+
+        if not ingredients:
+            return Response(
+                {"detail": "Список покупок пуст."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         recipes = Recipe.objects.filter(usershoppinglist__user=user)
 
@@ -200,6 +212,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             "Content-Disposition"
         ] = 'attachment; filename="shopping_cart.txt"'
         return response
+
+    @action(["get"], detail=False, permission_classes=(IsAuthenticated,))
+    def list_shopping_cart(self, request):
+        """Получаем список рецептов в корзине покупок текущего пользователя."""
+        user = request.user
+        shopping_cart_items = UserShoppingList.objects.filter(user=user)
+        serializer = ShoppingCartSerializer(shopping_cart_items, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
