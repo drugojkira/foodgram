@@ -16,7 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
@@ -172,6 +172,10 @@ DJOSER = {
     },
     'LOGIN_FIELD': 'email',
     'HIDE_USERS': False,
+}
+
+SWAGGER_SETTINGS = {
+    'DEFAULT_API_URL': 'https://thedrugojkira.zapto.org/api/',
 }
 
 SHORT_CODE_LENGTH = 6

@@ -98,7 +98,7 @@ class TagAdmin(admin.ModelAdmin):
 
 class IngredientAdmin(admin.ModelAdmin):
     """Отображение ингредиентов с фильтром по единицам измерения."""
-    search_fields = ("name", "ingredients__name", "author__username")
+    search_fields = ("name",)
     list_display = ("name", "measurement_unit", "recipes_count")
     list_filter = ("measurement_unit",)
 
