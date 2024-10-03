@@ -57,7 +57,7 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        ordering = ('name',)
+        ordering = ['name']
         constraints = [
             models.UniqueConstraint(
                 fields=('name', 'measurement_unit'),
@@ -245,3 +245,4 @@ class UserSubscriptions(models.Model):
         ]
         verbose_name = 'подписка'
         verbose_name_plural = 'подписки'
+        ordering = ['user', 'author']

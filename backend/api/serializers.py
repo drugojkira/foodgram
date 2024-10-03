@@ -5,7 +5,7 @@ from djoser.serializers import UserCreateSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.constants import MIN_AMOUNT
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserShoppingList, UserSubscriptions)
+                            UserShoppingList, UserSubscriptions, UserFavorite)
 from rest_framework import serializers
 
 User = get_user_model()
@@ -77,6 +77,27 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ("amount", "id", "name", "measurement_unit")
 
 
+class FavoriteSerializer(serializers.ModelSerializer):
+    """Сериализатор для рецептов в избранном."""
+
+    class Meta:
+        model = UserFavorite
+        fields = ("user", "recipe")
+
+    def validate(self, data):
+        """Проверка перед добавлением рецепта в избранное."""
+        user = self.context['request'].user
+        recipe = data.get("recipe")
+
+        if not recipe:
+            raise ValidationError("Рецепт не может быть пустым.")
+        if UserFavorite.objects.filter(user=user, recipe=recipe).exists():
+            raise ValidationError("Этот рецепт уже в избранном.")
+
+        data["user"] = user
+        return data
+
+
 class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для получения и изменения рецептов."""
 
@@ -123,10 +144,15 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """Проверка перед добавлением рецепта в корзину."""
-        user = data['user']
-        recipe = data['recipe']
+        user = self.context['request'].user
+        recipe = data.get("recipe")
+
+        if not recipe:
+            raise ValidationError("Рецепт не может быть пустым.")
         if UserShoppingList.objects.filter(user=user, recipe=recipe).exists():
             raise ValidationError("Этот рецепт уже в списке покупок.")
+
+        data["user"] = user
         return data
 
 
@@ -145,7 +171,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 
     image = Base64ImageField()
     ingredients = RecipeIngredientCreateSerializer(
-        many=True, source="recipeingredient"
+        many=True, source="recipeingredients"
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True
@@ -154,6 +180,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
+            "id",
             "ingredients",
             "tags",
             "image",
@@ -224,10 +251,9 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        ingredients = validated_data.pop("recipeingredient")
+        ingredients = validated_data.pop("recipeingredients", [])
         tags = validated_data.pop("tags")
         image = validated_data.pop("image", None)
-        self.validate_ingredient_amounts(ingredients)
 
         # Создание рецепта с изображением
         recipe = Recipe.objects.create(
@@ -239,10 +265,9 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        ingredients = validated_data.pop("recipeingredient")
+        ingredients = validated_data.pop("recipeingredients", [])
         tags = validated_data.pop("tags")
         image = validated_data.pop("image", None)
-        self.validate_ingredient_amounts(ingredients)
 
         instance.tags.clear()
         instance.tags.set(tags)
@@ -266,25 +291,36 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         )
 
 
-class SubscriptionsSerializer(DjoserUserSerializer):
-    """Сериализатор для списка подписок пользователя."""
+class SubscriptionsSerializer(serializers.ModelSerializer):
+    """Сериализатор для отображения подписок пользователя."""
 
+    id = serializers.ReadOnlyField(source='author.id')
+    username = serializers.ReadOnlyField(source='author.username')
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(
-        source="recipes.count", read_only=True
+        source="author.recipes.count", read_only=True
     )
     is_subscribed = serializers.SerializerMethodField()
 
-    class Meta(DjoserUserSerializer.Meta):
-        model = User
-        fields = DjoserUserSerializer.Meta.fields + (
+    class Meta:
+        model = UserSubscriptions
+        fields = (
+            "id",
+            "username",
+            "first_name",
+            "last_name",
             "recipes",
             "recipes_count",
             "is_subscribed",
         )
 
-    def get_recipes(self, user):
-        """Получаем рецепты пользователя с учетом ограничения на количество."""
+    def get_recipes(self, subscription):
+        """
+        Получаем рецепты автора, на которого подписан пользователь.
+        """
+        # Получаем ограничение на количество рецептов, если указано
         recipes_limit = self.context["request"].query_params.get(
             "recipes_limit"
         )
@@ -293,22 +329,23 @@ class SubscriptionsSerializer(DjoserUserSerializer):
         except (TypeError, ValueError):
             recipes_limit = None
 
-        recipes = user.recipes.all()
+        # Получаем рецепты автора (subscription.author)
+        recipes = subscription.author.recipes.all()
         if recipes_limit:
             recipes = recipes[:recipes_limit]
 
-        return RecipeSerializer(
-            recipes, many=True, fields=(
-                "id",
-                "name",
-                "image",
-                "cooking_time",)).data
+        # Сериализуем и возвращаем рецепты автора
+        return RecipeSerializer(recipes, many=True, context=self.context).data
 
-    def get_is_subscribed(self, user):
-        """Проверяем, подписан ли текущий пользователь на пользователя."""
+    def get_is_subscribed(self, subscription):
+        """
+        Проверяем, подписан ли текущий пользователь на автора.
+        """
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
+
+        # Проверка наличия подписки на автора
         return UserSubscriptions.objects.filter(
-            user=request.user, author=user
+            user=request.user, author=subscription.author
         ).exists()
