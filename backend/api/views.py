@@ -2,10 +2,11 @@ from api.filters import RecipeFilter
 from api.pagination import FoodgramPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.recipes_utils import format_shopping_cart
-from api.serializers import (AvatarSerializer, IngredientSerializer,
+from api.serializers import (AvatarSerializer, FavoriteSerializer,
+                             IngredientSerializer,
                              RecipeCreateUpdateSerializer, RecipeSerializer,
                              ShoppingCartSerializer, SubscriptionsSerializer,
-                             TagSerializer, FavoriteSerializer)
+                             TagSerializer)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
@@ -130,9 +131,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Возвращает сериализатор в зависимости от действия (action)."""
         if self.action in ("create", "partial_update"):
             return RecipeCreateUpdateSerializer
-        elif self.action == "favorite":
+        if self.action == "favorite":
             return FavoriteSerializer
-        elif self.action == "shopping_cart":
+        if self.action == "shopping_cart":
             return ShoppingCartSerializer
         return RecipeSerializer
 

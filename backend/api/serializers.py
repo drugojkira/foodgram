@@ -5,7 +5,7 @@ from djoser.serializers import UserCreateSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.constants import MIN_AMOUNT
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserShoppingList, UserSubscriptions, UserFavorite)
+                            UserFavorite, UserShoppingList, UserSubscriptions)
 from rest_framework import serializers
 
 User = get_user_model()
