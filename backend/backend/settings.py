@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from corsheaders.defaults import default_headers
 
 from dotenv import load_dotenv
 
@@ -34,6 +35,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'djoser',
+    'corsheaders',
     'drf_yasg',
     'recipes.apps.RecipesConfig',
     'api.apps.ApiConfig',
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -177,6 +180,18 @@ DJOSER = {
 SWAGGER_SETTINGS = {
     'DEFAULT_API_URL': 'https://thedrugojkira.zapto.org/api/',
 }
+
+CORS_ALLOWED_ORIGINS = [
+    'https://thedrugojkira.zapto.org',
+]
+
+# Разрешить отправку запросов с учетными данными
+CORS_ALLOW_CREDENTIALS = True
+
+# Разрешить все заголовки, включая заголовок 'content-type'
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'contenttype',
+]
 
 SHORT_CODE_LENGTH = 6
 SHORT_LINK_URL_PATH = 's'

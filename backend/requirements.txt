@@ -17,3 +17,4 @@ pytest==6.2.4
 pytest-django==4.4.0
 drf-extra-fields
 drf-yasg
+django-cors-headers
