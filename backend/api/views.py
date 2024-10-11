@@ -1,4 +1,4 @@
-from api.filters import RecipeFilter
+from api.filters import RecipeFilter, IngredientSearchFilter
 from api.pagination import FoodgramPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.recipes_utils import format_shopping_cart
@@ -248,7 +248,9 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
-    filter_backends = [SearchFilter, DjangoFilterBackend]
+    filter_backends = [
+        IngredientSearchFilter, DjangoFilterBackend, SearchFilter
+    ]
     search_fields = ['name']
 
 

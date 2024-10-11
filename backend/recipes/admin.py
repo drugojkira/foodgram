@@ -5,13 +5,8 @@ from django.utils.safestring import mark_safe
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
                             UserFavorite, UserShoppingList)
 
-from .constants import TIME_FAST, TIME_MAX, TIME_MEDIUM
 
 User = get_user_model()
-
-FAST_COOKING_TIME = (0, TIME_FAST)
-MEDIUM_COOKING_TIME = (TIME_FAST, TIME_MEDIUM)
-LONG_COOKING_TIME = (TIME_MEDIUM, TIME_MAX)
 
 
 class CookingTimeFilter(admin.SimpleListFilter):
@@ -21,9 +16,9 @@ class CookingTimeFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [
-            (FAST_COOKING_TIME, f"Быстрее {TIME_FAST} мин"),
-            (MEDIUM_COOKING_TIME, f"Быстрее {TIME_MEDIUM} мин"),
-            (LONG_COOKING_TIME, f"Дольше {TIME_MEDIUM} мин"),
+            ((0, 15), "Быстрее 15 мин"),
+            ((15, 30), "Быстрее 30 мин"),
+            ((30, 60), "Дольше 30 мин"),
         ]
 
     def queryset(self, request, queryset):
@@ -186,7 +181,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(description="Избранные")
     def count_favorites(self, recipe):
-        return UserFavorite.objects.filter(recipe=recipe).count()
+        return recipe.favorited_by.count()
 
 
 class FoodgramUserAdmin(UserAdmin):
