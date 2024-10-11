@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
-from corsheaders.defaults import default_headers
 
+from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 
 load_dotenv()
