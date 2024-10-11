@@ -5,7 +5,6 @@ from django.utils.safestring import mark_safe
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
                             UserFavorite, UserShoppingList)
 
-
 User = get_user_model()
 
 

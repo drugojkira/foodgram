@@ -1,4 +1,4 @@
-from api.filters import RecipeFilter, IngredientSearchFilter
+from api.filters import IngredientSearchFilter, RecipeFilter
 from api.pagination import FoodgramPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.recipes_utils import format_shopping_cart
