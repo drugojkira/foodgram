@@ -3,21 +3,28 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
-                            UserFavorite, UserShoppingList)
+                            UserFavorite, UserShoppingList, UserSubscriptions)
 
 User = get_user_model()
 
 
 class CookingTimeFilter(admin.SimpleListFilter):
     """Фильтр по времени готовки."""
+
     title = "Время готовки"
     parameter_name = "cooking_time"
 
+    # Константы для порогов
+    MIN_TIME_1 = 1
+    MAX_TIME_15 = 15
+    MAX_TIME_30 = 30
+    MAX_TIME_INFINITE = 10**10
+
     def lookups(self, request, model_admin):
         return [
-            ((0, 15), "Быстрее 15 мин"),
-            ((15, 30), "Быстрее 30 мин"),
-            ((30, 60), "Дольше 30 мин"),
+            ((self.MIN_TIME_1, self.MAX_TIME_15), "Быстрее 15 мин"),
+            ((self.MAX_TIME_15, self.MAX_TIME_30), "Быстрее 30 мин"),
+            ((self.MAX_TIME_30, self.MAX_TIME_INFINITE), "Дольше 30 мин"),
         ]
 
     def queryset(self, request, queryset):
@@ -58,7 +65,7 @@ class HasSubscriptionsFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         has_subscriptions = self.value() == 'yes'
         return queryset.filter(
-            subscriptions__isnull=not has_subscriptions
+            subscriber__isnull=not has_subscriptions
         ).distinct()
 
 
@@ -76,7 +83,7 @@ class HasSubscribersFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         has_subscriptions = self.value() == 'yes'
         return queryset.filter(
-            subscribers__isnull=not has_subscriptions
+            author_user__isnull=not has_subscriptions
         ).distinct()
 
 
@@ -245,3 +252,4 @@ admin.site.register(Tag, TagAdmin)
 admin.site.register(UserFavorite, UserFavoriteAdmin)
 admin.site.register(UserShoppingList, UserShoppingListAdmin)
 admin.site.register(RecipeIngredient)
+admin.site.register(UserSubscriptions)

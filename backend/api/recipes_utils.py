@@ -6,9 +6,12 @@ def format_shopping_cart(ingredients, recipes):
     Формирование строки для файла со списком покупок.
     Добавлены дата, нумерация продуктов, заголовки и список рецептов.
     """
+    # Получение текущей даты
+    current_date = datetime.now().strftime('%Y-%m-%d')
+
     # Проверка структуры входных данных
     if not ingredients or not recipes:
-        return "Список покупок пуст."
+        return f"Список покупок пуст на {current_date}."
 
     # Заголовки и нумерация продуктов
     ingredients = [
@@ -22,7 +25,7 @@ def format_shopping_cart(ingredients, recipes):
 
     # Составляем и возвращаем весь отчет
     return '\n'.join([
-        f"Список покупок на {datetime.now().strftime('%Y-%m-%d')}:",
+        f"Список покупок на {current_date}:",
         "Продукты:",
         *ingredients,
         "",

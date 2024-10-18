@@ -77,27 +77,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ("amount", "id", "name", "measurement_unit")
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-    """Сериализатор для рецептов в избранном."""
-
-    class Meta:
-        model = UserFavorite
-        fields = ("user", "recipe")
-
-    def validate(self, data):
-        """Проверка перед добавлением рецепта в избранное."""
-        user = self.context['request'].user
-        recipe = data.get("recipe")
-
-        if not recipe:
-            raise ValidationError("Рецепт не может быть пустым.")
-        if UserFavorite.objects.filter(user=user, recipe=recipe).exists():
-            raise ValidationError("Этот рецепт уже в избранном.")
-
-        data["user"] = user
-        return data
-
-
 class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для получения и изменения рецептов."""
 
@@ -121,8 +100,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
-        return recipe.favorited_by.filter(
-            id=request.user.id
+        return UserFavorite.objects.filter(
+            user=request.user,
+            recipe=recipe
         ).exists()
 
     def get_is_in_shopping_cart(self, recipe):
@@ -130,30 +110,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
-        return recipe.in_shopping_lists.filter(
-            id=request.user.id
+        return UserShoppingList.objects.filter(
+            user=request.user,
+            recipe=recipe
         ).exists()
-
-
-class ShoppingCartSerializer(serializers.ModelSerializer):
-    """Сериализатор для рецептов в корзине покупок."""
-
-    class Meta:
-        model = UserShoppingList
-        fields = ("user", "recipe")
-
-    def validate(self, data):
-        """Проверка перед добавлением рецепта в корзину."""
-        user = self.context['request'].user
-        recipe = data.get("recipe")
-
-        if not recipe:
-            raise ValidationError("Рецепт не может быть пустым.")
-        if UserShoppingList.objects.filter(user=user, recipe=recipe).exists():
-            raise ValidationError("Этот рецепт уже в списке покупок.")
-
-        data["user"] = user
-        return data
 
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):

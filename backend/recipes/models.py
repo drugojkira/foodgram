@@ -188,13 +188,6 @@ class BaseUserRecipeList(models.Model):
 class UserFavorite(BaseUserRecipeList):
     """Модель для списка избранного пользователя."""
 
-    user = models.ForeignKey(
-        FoodgramUser, on_delete=models.CASCADE, related_name='favorites'
-    )
-    recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, related_name='favorited_by'
-    )
-
     class Meta(BaseUserRecipeList.Meta):
         verbose_name = 'избранное'
         verbose_name_plural = 'Избранные'
@@ -202,15 +195,6 @@ class UserFavorite(BaseUserRecipeList):
 
 class UserShoppingList(BaseUserRecipeList):
     """Модель для списка покупок пользователя."""
-
-    user = models.ForeignKey(
-        FoodgramUser, on_delete=models.CASCADE, related_name='shopping_lists',
-        verbose_name='Пользователь'
-    )
-    recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, related_name='in_shopping_lists',
-        verbose_name='Рецепт'
-    )
 
     class Meta(BaseUserRecipeList.Meta):
         verbose_name = 'список покупок'
@@ -223,13 +207,13 @@ class UserSubscriptions(models.Model):
     user = models.ForeignKey(
         FoodgramUser,
         verbose_name='Пользователь',
-        related_name='subscriptions',
+        related_name='subscriber',
         on_delete=models.CASCADE
     )
     author = models.ForeignKey(
         FoodgramUser,
         verbose_name='Автор',
-        related_name='subscribers',
+        related_name='author_user',
         on_delete=models.CASCADE
     )
 

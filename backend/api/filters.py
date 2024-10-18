@@ -27,14 +27,14 @@ class RecipeFilter(filters.FilterSet):
     def filter_is_favorited(self, recipes, name, value):
         if self.request.user.is_authenticated and value:
             return recipes.filter(
-                favorited_by__user=self.request.user
+                userfavorites__user=self.request.user
             )
         return recipes
 
     def filter_is_in_shopping_cart(self, recipes, name, value):
         if self.request.user.is_authenticated and value:
             return recipes.filter(
-                in_shopping_lists__user=self.request.user
+                usershoppinglists__user=self.request.user
             )
         return recipes
 
