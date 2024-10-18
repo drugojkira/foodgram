@@ -44,6 +44,16 @@ class FoodgramUser(AbstractUser):
     def shopping_list_count(self):
         return self.shopping_lists.count()
 
+    @property
+    def subscriptions(self):
+        """Подписки пользователя."""
+        return self.author_user.all()
+
+    @property
+    def subscribers(self):
+        """Подписчики пользователя."""
+        return self.subscriber.all()
+
 
 class Ingredient(models.Model):
     """Модель ингредиентов."""

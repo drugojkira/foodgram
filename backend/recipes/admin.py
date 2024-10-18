@@ -187,7 +187,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(description="Избранные")
     def count_favorites(self, recipe):
-        return recipe.favorited_by.count()
+        return recipe.userfavorites.count()
 
 
 class FoodgramUserAdmin(UserAdmin):
