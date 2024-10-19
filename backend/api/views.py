@@ -134,101 +134,76 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(["get"], detail=True, url_path="get-link")
     def get_link(self, request, pk=None):
         """Формирует короткую ссылку на рецепт."""
-        short_url_code = Recipe.objects.get(pk=pk).short_url_code
+        recipe = get_object_or_404(Recipe, pk=pk)
+        short_url_code = recipe.short_url_code
         short_url = request.build_absolute_uri(
             f"/{settings.SHORT_LINK_URL_PATH}/{short_url_code}/"
         )
         return Response({"short-link": short_url}, status=status.HTTP_200_OK)
 
-    @action(
-        ["post", "delete"],
-        detail=True,
-        permission_classes=(IsAuthenticated,)
-    )
-    def favorite(self, request, pk=None):
-        """Обработка добавления и удаления рецептов из избранного."""
-        user = request.user
-        recipe = get_object_or_404(Recipe, pk=pk)
-
+    def handle_add_remove(self, request, model, user, recipe, action_type):
+        """Общий метод для добавления/удаления рецептов """
         if request.method == "DELETE":
-            UserFavorite.objects.filter(user=user, recipe=recipe).delete()
+            # Удаление рецепта из избранного или списка покупок
+            get_object_or_404(model, user=user, recipe=recipe).delete()
             return Response(
-                {"detail": "Рецепт успешно удалён из избранного."},
+                {"detail": f"Рецепт успешно удалён из {action_type}."},
                 status=status.HTTP_204_NO_CONTENT
             )
 
-        # Проверка на существование рецепта в избранном
-        if UserFavorite.objects.filter(user=user, recipe=recipe).exists():
-            return Response(
-                {"detail": "Этот рецепт уже в избранном."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Добавление рецепта в избранное или список покупок
+        obj, created = model.objects.get_or_create(user=user, recipe=recipe)
+        if not created:
+            raise ValidationError(f"Этот рецепт уже в {action_type}.")
 
-        # Добавление рецепта в избранное
-        UserFavorite.objects.create(user=user, recipe=recipe)
         return Response(
-            {"detail": "Рецепт успешно добавлен в избранное."},
+            {"detail": f"Рецепт успешно добавлен в {action_type}."},
             status=status.HTTP_201_CREATED
         )
 
-    @action(
-        ["post", "delete"],
-        detail=True, permission_classes=(IsAuthenticated,)
-    )
-    def shopping_cart(self, request, pk=None):
-        """Обработка добавления и удаления рецептов из списка покупок."""
+    @action(["post", "delete"], detail=True, permission_classes=(
+            IsAuthenticated,))
+    def favorite(self, request, pk=None):
+        """Добавление/удаление рецепта из избранного."""
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
+        return self.handle_add_remove(
+            request, UserFavorite, user, recipe, "избранное"
+        )
 
-        if request.method == "DELETE":
-            # Используем get_object_or_404 для удаления
-            get_object_or_404(
-                UserShoppingList, user=user, recipe=recipe).delete()
-            return Response(
-                {"detail": "Рецепт успешно удалён из списка покупок."},
-                status=status.HTTP_204_NO_CONTENT
-            )
-
-        # Обработка добавления
-        if UserShoppingList.objects.filter(user=user, recipe=recipe).exists():
-            return Response(
-                {"detail": "Этот рецепт уже в списке покупок."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Добавление рецепта в список покупок
-        UserShoppingList.objects.create(user=user, recipe=recipe)
-        return Response(
-            {"detail": "Рецепт успешно добавлен в список покупок."},
-            status=status.HTTP_201_CREATED
+    @action(["post", "delete"], detail=True, permission_classes=(
+            IsAuthenticated,))
+    def shopping_cart(self, request, pk=None):
+        """Добавление/удаление рецепта из списка покупок."""
+        user = request.user
+        recipe = get_object_or_404(Recipe, pk=pk)
+        return self.handle_add_remove(
+            request, UserShoppingList, user, recipe, "список покупок"
         )
 
     @action(["get"], detail=False, permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
         """Формирует и скачивает список покупок в виде текстового файла."""
         user = request.user
-
         recipes = Recipe.objects.filter(usershoppinglists__user=user)
 
         # Получаем ингредиенты и рецепты из списка покупок пользователя
         ingredients = RecipeIngredient.objects.filter(
-            recipe__in=recipes).values(
+            recipe__in=recipes
+        ).values(
             "ingredient__name", "ingredient__measurement_unit"
         ).annotate(amount=Sum("amount")).order_by("ingredient__name")
 
         if not ingredients.exists():
-            return Response(
-                {"detail": "Список покупок пуст."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            raise ValidationError("Список покупок пуст.")
 
         # Формируем текст для файла со списком покупок
         shopping_cart_content = format_shopping_cart(ingredients, recipes)
 
-        # Возвращаем файл как текстовый ответ
+        # Возвращаем файл как текстовый ответ с правильным расширением .txt
         return FileResponse(
             shopping_cart_content, as_attachment=True,
-            filename="shopping_cart.txt"
+            filename="shopping_cart.txt", content_type="text/plain"
         )
 
 

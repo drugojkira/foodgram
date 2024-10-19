@@ -23,7 +23,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     path("api/", include("api.urls")),
     path("admin/", admin.site.urls),
-    path("", include("recipes.urls")),
+    path("", include("recipes.urls", namespace='recipes')),
 
     # URL для Swagger-документации
     path(

@@ -47,12 +47,12 @@ class FoodgramUser(AbstractUser):
     @property
     def subscriptions(self):
         """Подписки пользователя."""
-        return self.author_user.all()
+        return self.author_users.all()
 
     @property
     def subscribers(self):
         """Подписчики пользователя."""
-        return self.subscriber.all()
+        return self.subscribers.all()
 
 
 class Ingredient(models.Model):
@@ -217,13 +217,13 @@ class UserSubscriptions(models.Model):
     user = models.ForeignKey(
         FoodgramUser,
         verbose_name='Пользователь',
-        related_name='subscriber',
+        related_name='subscribers',
         on_delete=models.CASCADE
     )
     author = models.ForeignKey(
         FoodgramUser,
         verbose_name='Автор',
-        related_name='author_user',
+        related_name='author_users',
         on_delete=models.CASCADE
     )
 

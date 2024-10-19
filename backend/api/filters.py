@@ -9,6 +9,7 @@ class IngredientSearchFilter(SearchFilter):
     """Фильтр для ингредиентов рецепта."""
 
     search_param = "name"
+    search_fields = ['name', 'measurement_unit']
 
 
 class RecipeFilter(filters.FilterSet):
