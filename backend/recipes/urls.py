@@ -10,4 +10,5 @@ urlpatterns = [
         views.expand,
         name='expand'
     ),
+    path('recipes/<int:pk>/', views.RecipeDetailView.as_view(), name='detail'),
 ]
