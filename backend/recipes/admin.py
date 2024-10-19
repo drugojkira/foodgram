@@ -2,9 +2,9 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
+from recipes.constants import MIN_COOKING_TIME
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag,
                             UserFavorite, UserShoppingList, UserSubscriptions)
-from recipes.constants import MIN_COOKING_TIME
 
 User = get_user_model()
 
