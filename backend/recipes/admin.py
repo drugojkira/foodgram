@@ -47,8 +47,12 @@ class HasRecipesFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
-        has_recipes = self.value() == 'yes'
-        return queryset.filter(recipes__isnull=not has_recipes).distinct()
+        value = self.value()
+        if value == 'yes':
+            return queryset.filter(recipes__isnull=False).distinct()
+        if value == 'no':
+            return queryset.filter(recipes__isnull=True).distinct()
+        return queryset
 
 
 class HasSubscriptionsFilter(admin.SimpleListFilter):
@@ -63,10 +67,12 @@ class HasSubscriptionsFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
-        has_subscriptions = self.value() == 'yes'
-        return queryset.filter(
-            subscribers__isnull=not has_subscriptions
-        ).distinct()
+        value = self.value()
+        if value == 'yes':
+            return queryset.filter(subscribers__isnull=False).distinct()
+        if value == 'no':
+            return queryset.filter(subscribers__isnull=True).distinct()
+        return queryset
 
 
 class HasSubscribersFilter(admin.SimpleListFilter):
@@ -81,10 +87,12 @@ class HasSubscribersFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
-        has_subscriptions = self.value() == 'yes'
-        return queryset.filter(
-            author_users__isnull=not has_subscriptions
-        ).distinct()
+        value = self.value()
+        if value == 'yes':
+            return queryset.filter(author_users__isnull=False).distinct()
+        if value == 'no':
+            return queryset.filter(author_users__isnull=True).distinct()
+        return queryset
 
 
 class TagAdmin(admin.ModelAdmin):
@@ -208,7 +216,6 @@ class FoodgramUserAdmin(UserAdmin):
         "subscriber_count",
     )
     list_filter = (
-        'is_active', 'is_staff', 'is_superuser',
         HasRecipesFilter, HasSubscriptionsFilter, HasSubscribersFilter
     )
 
