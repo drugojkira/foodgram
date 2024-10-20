@@ -116,8 +116,6 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.PASSPHRASE }}
         script: |
-          sudo -u postgres psql -c "DROP DATABASE IF EXISTS django_db;"
-          sudo -u postgres psql -c "CREATE DATABASE django_db WITH OWNER django_user;"
           cd foodgram
           sudo docker compose -f docker-compose.production.yml pull
           sudo docker compose -f docker-compose.production.yml down
