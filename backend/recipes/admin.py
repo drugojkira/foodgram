@@ -18,13 +18,16 @@ class CookingTimeFilter(admin.SimpleListFilter):
     # Константы для порогов
     MAX_TIME_FAST = 15  # Порог для быстрого приготовления (15 мин)
     MAX_TIME_MEDIUM = 30  # Порог для среднего времени приготовления (30 мин)
-    MAX_TIME_INFINITE = float('inf')  # Порог для бесконечного времени
+    MAX_TIME_INFINITE = 10**10  # Порог для бесконечного времени
 
     def lookups(self, request, model_admin):
         return [
             ((MIN_COOKING_TIME, self.MAX_TIME_FAST), "Быстрее 15 мин"),
-            ((self.MAX_TIME_FAST, self.MAX_TIME_MEDIUM), "Быстрее 30 мин"),
-            ((self.MAX_TIME_MEDIUM, self.MAX_TIME_INFINITE), "Дольше 30 мин"),
+            ((self.MAX_TIME_FAST + 1, self.MAX_TIME_MEDIUM), "Быстрее 30 мин"),
+            (
+                (self.MAX_TIME_MEDIUM + 1, self.MAX_TIME_INFINITE),
+                "Дольше 30 мин"
+            ),
         ]
 
     def queryset(self, request, queryset):
@@ -48,11 +51,8 @@ class HasRecipesFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         value = self.value()
-        if value == 'yes':
-            return queryset.filter(recipes__isnull=False).distinct()
-        if value == 'no':
-            return queryset.filter(recipes__isnull=True).distinct()
-        return queryset
+        if value in ['yes', 'no']:
+            return queryset.filter(recipes__isnull=(value == 'no')).distinct()
 
 
 class HasSubscriptionsFilter(admin.SimpleListFilter):
@@ -68,11 +68,8 @@ class HasSubscriptionsFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         value = self.value()
-        if value == 'yes':
-            return queryset.filter(subscribers__isnull=False).distinct()
-        if value == 'no':
-            return queryset.filter(subscribers__isnull=True).distinct()
-        return queryset
+        if value in ['yes', 'no']:
+            return queryset.filter(recipes__isnull=(value == 'no')).distinct()
 
 
 class HasSubscribersFilter(admin.SimpleListFilter):
@@ -88,11 +85,8 @@ class HasSubscribersFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         value = self.value()
-        if value == 'yes':
-            return queryset.filter(author_users__isnull=False).distinct()
-        if value == 'no':
-            return queryset.filter(author_users__isnull=True).distinct()
-        return queryset
+        if value in ['yes', 'no']:
+            return queryset.filter(recipes__isnull=(value == 'no')).distinct()
 
 
 class TagAdmin(admin.ModelAdmin):
@@ -171,7 +165,13 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(description="Время приготовления")
     def cooking_time_with_units(self, recipe):
-        return f"{recipe.cooking_time} минут"
+        if recipe.cooking_time >= 60:
+            hours = recipe.cooking_time // 60
+            minutes = recipe.cooking_time % 60
+            if minutes > 0:
+                return f"{hours} ч {minutes} мин"
+            return f"{hours} ч"
+        return f"{recipe.cooking_time} мин"
 
     @admin.display(description='Изображение')
     def display_image(self, recipe):
@@ -237,12 +237,12 @@ class FoodgramUserAdmin(UserAdmin):
     @admin.display(description="Подписки")
     def subscription_count(self, user):
         """Количество подписок пользователя."""
-        return user.subscriptions.count()
+        return user.subscribers.count()
 
     @admin.display(description="Подписчики")
     def subscriber_count(self, user):
         """Количество подписчиков пользователя."""
-        return user.subscribers.count()
+        return user.author_users.count()
 
 
 class UserFavoriteAdmin(admin.ModelAdmin):

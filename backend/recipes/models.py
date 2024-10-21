@@ -5,7 +5,6 @@ from django.db.models import F, Q
 from recipes.constants import (MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT,
                                MIN_COOKING_TIME, NAME_MAX_LENGTH,
                                SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGTH)
-from recipes.short_code_generator import generate_short_code
 
 USERNAME_REGEX = r'^[a-zA-Z0-9._]+$'
 
@@ -112,7 +111,8 @@ class Recipe(models.Model):
     short_url_code = models.CharField(
         'Код короткой ссылки',
         max_length=SHORT_URL_CODE_MAX_LENGTH,
-        unique=True
+        unique=True,
+        blank=True
     )
     author = models.ForeignKey(
         FoodgramUser,
@@ -141,11 +141,11 @@ class Recipe(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        if not self.id:
+            super().save(*args, **kwargs)
         if not self.short_url_code:
-            self.short_url_code = generate_short_code(
-                self.__class__, 'short_url_code'
-            )
-        return super().save(*args, **kwargs)
+            self.short_url_code = str(self.id)
+        super().save(*args, **kwargs)
 
 
 class RecipeIngredient(models.Model):
