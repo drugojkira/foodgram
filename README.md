@@ -6,8 +6,8 @@
 
 Реализован процесс CI/CD с помощью GitHub Actions (активация происходит при push в ветку releases). При успешном деплое на сервер происходит отправка сообщения в Telegram.
 
-[Проект с тестовыми данными доступен по адресу](https://thedrugojkira.zapto.org/recipes)
-[Документация доступна по адресу](https://thedrugojkira.zapto.org/api/)
+[Проект с тестовыми данными доступен по адресу](https://drugojkira.zapto.org/recipes)
+[Документация доступна по адресу](https://drugojkira.zapto.org/api/)
 
 
 # Авторы проекта
