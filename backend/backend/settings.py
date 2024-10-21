@@ -178,11 +178,11 @@ DJOSER = {
 }
 
 SWAGGER_SETTINGS = {
-    'DEFAULT_API_URL': 'https://thedrugojkira.zapto.org/api/',
+    'DEFAULT_API_URL': 'https://drugojkira.zapto.org/api/',
 }
 
 CORS_ALLOWED_ORIGINS = [
-    'https://thedrugojkira.zapto.org',
+    'https://drugojkira.zapto.org',
 ]
 
 # Разрешить отправку запросов с учетными данными
