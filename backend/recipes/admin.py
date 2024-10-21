@@ -53,6 +53,7 @@ class HasRecipesFilter(admin.SimpleListFilter):
         value = self.value()
         if value in ['yes', 'no']:
             return queryset.filter(recipes__isnull=(value == 'no')).distinct()
+        return queryset
 
 
 class HasSubscriptionsFilter(admin.SimpleListFilter):
@@ -70,6 +71,7 @@ class HasSubscriptionsFilter(admin.SimpleListFilter):
         value = self.value()
         if value in ['yes', 'no']:
             return queryset.filter(recipes__isnull=(value == 'no')).distinct()
+        return queryset
 
 
 class HasSubscribersFilter(admin.SimpleListFilter):
@@ -87,6 +89,7 @@ class HasSubscribersFilter(admin.SimpleListFilter):
         value = self.value()
         if value in ['yes', 'no']:
             return queryset.filter(recipes__isnull=(value == 'no')).distinct()
+        return queryset
 
 
 class TagAdmin(admin.ModelAdmin):

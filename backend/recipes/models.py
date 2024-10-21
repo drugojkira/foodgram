@@ -141,11 +141,12 @@ class Recipe(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        if not self.id:
-            super().save(*args, **kwargs)
-        if not self.short_url_code:
-            self.short_url_code = str(self.id)
+        is_new = self.pk is None
         super().save(*args, **kwargs)
+
+        if is_new and not self.short_url_code:
+            self.short_url_code = str(self.id)
+            super().save(update_fields=['short_url_code'])
 
 
 class RecipeIngredient(models.Model):
