@@ -139,7 +139,6 @@ class RecipeAdmin(admin.ModelAdmin):
         "display_ingredients",
     )
     readonly_fields = (
-        "short_url_code",
         "count_favorites",
         "display_image",
         "display_tags",

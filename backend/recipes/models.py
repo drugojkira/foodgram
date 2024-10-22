@@ -4,9 +4,9 @@ from django.db import models
 from django.db.models import F, Q
 from recipes.constants import (MEASUREMENT_NAME_MAX_LENGTH, MIN_AMOUNT,
                                MIN_COOKING_TIME, NAME_MAX_LENGTH,
-                               SHORT_URL_CODE_MAX_LENGTH, TAG_NAME_MAX_LENGTH)
+                               TAG_NAME_MAX_LENGTH)
 
-USERNAME_REGEX = r'^[a-zA-Z0-9._]+$'
+USERNAME_REGEX = r'^[\w.@+-]+$'
 
 
 class FoodgramUser(AbstractUser):
@@ -108,12 +108,6 @@ class Recipe(models.Model):
         validators=[MinValueValidator(MIN_COOKING_TIME)]
     )
     created_at = models.DateTimeField('Время добавления', auto_now_add=True)
-    short_url_code = models.CharField(
-        'Код короткой ссылки',
-        max_length=SHORT_URL_CODE_MAX_LENGTH,
-        unique=True,
-        blank=True
-    )
     author = models.ForeignKey(
         FoodgramUser,
         verbose_name='Автор',
@@ -139,14 +133,6 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
-
-    def save(self, *args, **kwargs):
-        is_new = self.pk is None
-        super().save(*args, **kwargs)
-
-        if is_new and not self.short_url_code:
-            self.short_url_code = str(self.id)
-            super().save(update_fields=['short_url_code'])
 
 
 class RecipeIngredient(models.Model):
